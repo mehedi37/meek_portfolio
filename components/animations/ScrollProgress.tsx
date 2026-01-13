@@ -4,20 +4,16 @@ import { motion, useScroll, useSpring } from "framer-motion";
 
 interface ScrollProgressProps {
   className?: string;
-  showPercentage?: boolean;
   position?: "top" | "bottom";
-  color?: string;
 }
 
 /**
- * Visual scroll progress indicator
- * Shows how far the user has scrolled through the page
+ * ORBITAL Scroll Progress
+ * Gradient progress bar with glow effect
  */
 export function ScrollProgress({
   className = "",
-  showPercentage = false,
   position = "top",
-  color = "var(--color-accent)",
 }: ScrollProgressProps) {
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, {
@@ -27,15 +23,26 @@ export function ScrollProgress({
   });
 
   return (
-    <motion.div
-      className={`fixed left-0 right-0 h-1 z-50 origin-left ${
+    <div
+      className={`fixed left-0 right-0 h-1 z-50 ${
         position === "top" ? "top-0" : "bottom-0"
       } ${className}`}
-      style={{
-        scaleX,
-        backgroundColor: color,
-      }}
-    />
+    >
+      {/* Background track */}
+      <div className="absolute inset-0 bg-[var(--glass-border)]" />
+      
+      {/* Progress bar */}
+      <motion.div
+        className="absolute inset-0 origin-left bg-gradient-to-r from-[var(--gradient-start)] via-[var(--gradient-mid)] to-[var(--gradient-end)]"
+        style={{ scaleX }}
+      />
+      
+      {/* Glow effect */}
+      <motion.div
+        className="absolute inset-0 origin-left bg-gradient-to-r from-[var(--gradient-start)] via-[var(--gradient-mid)] to-[var(--gradient-end)] blur-sm opacity-50"
+        style={{ scaleX }}
+      />
+    </div>
   );
 }
 
@@ -58,37 +65,50 @@ export function CircularScrollProgress({
     restDelta: 0.001,
   });
 
-  const radius = (size - strokeWidth) / 2;
-  const circumference = radius * 2 * Math.PI;
+  const center = size / 2;
+  const radius = center - strokeWidth;
+  const circumference = 2 * Math.PI * radius;
 
   return (
     <div className={`fixed bottom-8 right-8 z-50 ${className}`}>
-      <svg width={size} height={size} className="transform -rotate-90">
+      <svg
+        width={size}
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        className="transform -rotate-90"
+      >
         {/* Background circle */}
         <circle
-          cx={size / 2}
-          cy={size / 2}
+          cx={center}
+          cy={center}
           r={radius}
-          stroke="currentColor"
+          fill="transparent"
+          stroke="var(--glass-border)"
           strokeWidth={strokeWidth}
-          fill="none"
-          className="text-gray-200 dark:text-gray-700"
         />
+        
         {/* Progress circle */}
         <motion.circle
-          cx={size / 2}
-          cy={size / 2}
+          cx={center}
+          cy={center}
           r={radius}
-          stroke="var(--color-accent)"
+          fill="transparent"
+          stroke="url(#gradient)"
           strokeWidth={strokeWidth}
-          fill="none"
           strokeLinecap="round"
-          style={{
-            pathLength,
-            strokeDasharray: circumference,
-            strokeDashoffset: 0,
-          }}
+          style={{ pathLength }}
+          strokeDasharray={circumference}
+          strokeDashoffset={0}
         />
+        
+        {/* Gradient definition */}
+        <defs>
+          <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="var(--gradient-start)" />
+            <stop offset="50%" stopColor="var(--gradient-mid)" />
+            <stop offset="100%" stopColor="var(--gradient-end)" />
+          </linearGradient>
+        </defs>
       </svg>
     </div>
   );

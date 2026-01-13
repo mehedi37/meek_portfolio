@@ -1,20 +1,108 @@
 "use client";
 
-import { motion, useScroll, useTransform } from "framer-motion";
-import { useRef } from "react";
-import Link from "next/link";
-import { FaGithub, FaLinkedin, FaTwitter, FaArrowRight, FaChevronDown } from "react-icons/fa";
-import { AbstractHero } from "@/components/animations";
-import { FadeInSection, StaggerContainer, StaggerItem } from "@/components/animations";
+import { motion, useScroll, useTransform, useSpring, useMotionValue } from "framer-motion";
+import { useRef, useEffect, useCallback } from "react";
+import { Button, Avatar, Chip, Card } from "@heroui/react";
+import { FaGithub, FaLinkedin, FaArrowRight, FaDownload } from "react-icons/fa";
+import { HiSparkles, HiLocationMarker, HiLightningBolt, HiCode, HiGlobe } from "react-icons/hi";
 import { siteConfig, socialLinks } from "@/lib/constants";
 
 interface HeroProps {
   className?: string;
 }
 
+// Animated background gradient blob
+function GradientBlob({
+  size = 400,
+  color = "accent",
+  position = "top-left",
+  delay = 0
+}: {
+  size?: number;
+  color?: string;
+  position?: "top-left" | "top-right" | "bottom-left" | "bottom-right" | "center";
+  delay?: number;
+}) {
+  const positionClasses = {
+    "top-left": "top-0 left-0 -translate-x-1/2 -translate-y-1/2",
+    "top-right": "top-0 right-0 translate-x-1/2 -translate-y-1/2",
+    "bottom-left": "bottom-0 left-0 -translate-x-1/2 translate-y-1/2",
+    "bottom-right": "bottom-0 right-0 translate-x-1/2 translate-y-1/2",
+    "center": "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
+  };
+
+  return (
+    <motion.div
+      className={`absolute rounded-full blur-3xl opacity-20 ${positionClasses[position]}`}
+      style={{ width: size, height: size }}
+      initial={{ scale: 0.8, opacity: 0 }}
+      animate={{
+        scale: [0.8, 1.2, 0.8],
+        opacity: [0.1, 0.25, 0.1],
+      }}
+      transition={{
+        duration: 8,
+        delay,
+        repeat: Infinity,
+        ease: "easeInOut",
+      }}
+    >
+      <div className={`w-full h-full rounded-full ${color === "accent" ? "bg-accent" : "bg-success"}`} />
+    </motion.div>
+  );
+}
+
+// Status badge with pulse animation
+function StatusBadge() {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.2, duration: 0.5 }}
+    >
+      <Chip color="success" variant="soft" className="gap-2">
+        <span className="relative flex h-2 w-2">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75" />
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-success" />
+        </span>
+        Open to opportunities
+      </Chip>
+    </motion.div>
+  );
+}
+
+// Quick stats card
+function QuickStat({
+  icon: Icon,
+  value,
+  label,
+  delay = 0
+}: {
+  icon: React.ElementType;
+  value: string;
+  label: string;
+  delay?: number;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay, duration: 0.5 }}
+    >
+      <Card variant="secondary" className="p-4 text-center hover:scale-105 transition-transform cursor-default">
+        <Card.Content className="space-y-2 p-0">
+          <Icon className="w-5 h-5 mx-auto text-accent" />
+          <div className="text-2xl font-bold">{value}</div>
+          <div className="text-sm text-muted">{label}</div>
+        </Card.Content>
+      </Card>
+    </motion.div>
+  );
+}
+
 /**
- * Professional hero section with abstract animation
- * Clean, modern design with gradient accents
+ * Hero Section - Modern Bento-style layout
+ * Uses HeroUI v3 semantic classes with Framer Motion animations
  */
 export function Hero({ className = "" }: HeroProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -24,197 +112,276 @@ export function Hero({ className = "" }: HeroProps) {
     offset: ["start start", "end start"],
   });
 
-  // Subtle parallax effect
+  // Parallax transforms
   const y = useTransform(scrollYProgress, [0, 1], [0, 100]);
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+
+  // Mouse tracking for interactive elements
+  const mouseX = useSpring(useMotionValue(0), { stiffness: 50, damping: 20 });
+  const mouseY = useSpring(useMotionValue(0), { stiffness: 50, damping: 20 });
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    const { clientX, clientY } = e;
+    const { innerWidth, innerHeight } = window;
+    mouseX.set((clientX - innerWidth / 2) / 50);
+    mouseY.set((clientY - innerHeight / 2) / 50);
+  }, [mouseX, mouseY]);
+
+  useEffect(() => {
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, [handleMouseMove]);
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
     if (element) {
-      const offset = 80;
-      const elementPosition = element.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - offset;
-      window.scrollTo({ top: offsetPosition, behavior: "smooth" });
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
     }
-  };
-
-  // Social icon mapping
-  const socialIcons: Record<string, React.ElementType> = {
-    GitHub: FaGithub,
-    LinkedIn: FaLinkedin,
-    Twitter: FaTwitter,
   };
 
   return (
     <section
       ref={containerRef}
       id="hero"
-      className={`relative min-h-screen flex items-center pt-16 overflow-hidden ${className}`}
+      className={`relative min-h-screen flex items-center overflow-hidden bg-background ${className}`}
     >
-      {/* Background */}
-      <div className="absolute inset-0 -z-10">
-        {/* Gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-accent/5" />
-        
-        {/* Grid pattern */}
-        <div 
-          className="absolute inset-0 opacity-[0.02] dark:opacity-[0.03]"
+      {/* Animated Background */}
+      <div className="absolute inset-0 -z-10 overflow-hidden">
+        <GradientBlob size={600} color="accent" position="top-right" delay={0} />
+        <GradientBlob size={500} color="success" position="bottom-left" delay={2} />
+
+        {/* Subtle grid pattern */}
+        <div
+          className="absolute inset-0 opacity-[0.02]"
           style={{
             backgroundImage: `linear-gradient(var(--foreground) 1px, transparent 1px),
                              linear-gradient(90deg, var(--foreground) 1px, transparent 1px)`,
-            backgroundSize: "60px 60px",
+            backgroundSize: '60px 60px',
           }}
-        />
-
-        {/* Gradient orbs */}
-        <motion.div
-          className="absolute top-1/4 -left-32 w-96 h-96 rounded-full bg-accent/20 blur-[100px]"
-          animate={{
-            scale: [1, 1.1, 1],
-            opacity: [0.3, 0.4, 0.3],
-          }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="absolute bottom-1/4 -right-32 w-80 h-80 rounded-full bg-primary/15 blur-[100px]"
-          animate={{
-            scale: [1.1, 1, 1.1],
-            opacity: [0.2, 0.3, 0.2],
-          }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
         />
       </div>
 
-      <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div
-          className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center min-h-[calc(100vh-8rem)]"
-          style={{ y, opacity }}
-        >
-          {/* Text Content */}
-          <StaggerContainer className="text-center lg:text-left space-y-6 lg:space-y-8">
-            {/* Status badge */}
-            <StaggerItem>
-              <motion.div
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-accent/10 text-accent border border-accent/20"
-                whileHover={{ scale: 1.02 }}
-              >
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-accent" />
-                </span>
-                Available for new opportunities
-              </motion.div>
-            </StaggerItem>
+      {/* Main Content */}
+      <motion.div
+        className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20"
+        style={{ y, opacity }}
+      >
+        {/* Bento Grid Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-            {/* Main heading */}
-            <StaggerItem>
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight leading-[1.1]">
-                <span className="block text-foreground">Hi, I&apos;m</span>
-                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-accent via-primary to-accent bg-[length:200%_auto] animate-gradient">
-                  {siteConfig.name}
-                </span>
-              </h1>
-            </StaggerItem>
+          {/* Main Profile Card - Spans 8 columns */}
+          <motion.div
+            className="lg:col-span-8"
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <Card variant="default" className="p-8 lg:p-10 h-full">
+              <Card.Content className="space-y-8 p-0">
+                {/* Status Badge */}
+                <StatusBadge />
 
-            {/* Role/title */}
-            <StaggerItem>
-              <p className="text-xl sm:text-2xl text-muted-foreground font-medium">
-                Full Stack Developer
-              </p>
-            </StaggerItem>
+                {/* Profile Section */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+                  <motion.div
+                    className="relative"
+                    whileHover={{ scale: 1.05 }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                  >
+                    <Avatar className="size-24 lg:size-28 ring-4 ring-surface ring-offset-2 ring-offset-background">
+                      <Avatar.Image
+                        alt={siteConfig.name}
+                        src="https://img.heroui.chat/image/avatar?w=400&h=400&u=1"
+                      />
+                      <Avatar.Fallback className="text-2xl font-bold bg-accent text-white">
+                        {siteConfig.name.split(' ').map(n => n[0]).join('')}
+                      </Avatar.Fallback>
+                    </Avatar>
+                    {/* Online indicator */}
+                    <span className="absolute bottom-1 right-1 w-5 h-5 bg-success rounded-full border-3 border-surface" />
+                  </motion.div>
 
-            {/* Description */}
-            <StaggerItem>
-              <p className="text-base sm:text-lg text-muted-foreground/80 max-w-xl mx-auto lg:mx-0 leading-relaxed">
-                I craft modern, performant web applications with a focus on user experience 
-                and clean code. Specializing in React, Next.js, and TypeScript.
-              </p>
-            </StaggerItem>
+                  <div className="space-y-2">
+                    <h1 className="text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight">
+                      {siteConfig.name}
+                    </h1>
+                    <p className="text-xl lg:text-2xl text-muted font-medium">
+                      Full Stack Developer
+                    </p>
+                  </div>
+                </div>
 
-            {/* CTA Buttons */}
-            <StaggerItem>
-              <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
-                <motion.button
-                  onClick={() => scrollToSection("projects")}
-                  className="inline-flex items-center gap-2 px-6 py-3 text-base font-medium text-white bg-gradient-to-r from-accent to-primary rounded-xl shadow-lg shadow-accent/25 hover:shadow-xl hover:shadow-accent/30 transition-all duration-300"
-                  whileHover={{ scale: 1.02, y: -2 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  View My Work
-                  <FaArrowRight size={14} />
-                </motion.button>
-                
-                <motion.button
-                  onClick={() => scrollToSection("contact")}
-                  className="inline-flex items-center gap-2 px-6 py-3 text-base font-medium text-foreground bg-secondary/80 hover:bg-secondary border border-border/50 rounded-xl transition-all duration-300"
-                  whileHover={{ scale: 1.02, y: -2 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  Get in Touch
-                </motion.button>
-              </div>
-            </StaggerItem>
+                {/* Bio */}
+                <p className="text-lg text-muted leading-relaxed max-w-2xl">
+                  I craft beautiful, performant digital experiences that blend creativity
+                  with clean code. Specializing in modern web technologies and turning
+                  complex problems into elegant solutions.
+                </p>
 
-            {/* Social Links */}
-            <StaggerItem>
-              <div className="flex items-center gap-3 justify-center lg:justify-start pt-4">
-                <span className="text-sm text-muted-foreground">Find me on</span>
-                <div className="flex gap-2">
-                  {socialLinks.map((link) => {
-                    const Icon = socialIcons[link.name];
-                    if (!Icon) return null;
-                    return (
-                      <motion.a
-                        key={link.name}
-                        href={link.url}
+                {/* Info Pills */}
+                <div className="flex flex-wrap gap-3">
+                  <Chip variant="secondary" className="gap-2">
+                    <HiLocationMarker className="w-4 h-4" />
+                    Remote Worldwide
+                  </Chip>
+                  <Chip variant="secondary" className="gap-2">
+                    <HiLightningBolt className="w-4 h-4" />
+                    Available Now
+                  </Chip>
+                </div>
+
+                {/* CTA Buttons */}
+                <div className="flex flex-wrap gap-4 pt-4">
+                  <Button
+                    variant="primary"
+                    size="lg"
+                    onPress={() => scrollToSection("projects")}
+                    className="group"
+                  >
+                    View My Work
+                    <FaArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+
+                  <Button
+                    variant="secondary"
+                    size="lg"
+                    onPress={() => scrollToSection("contact")}
+                  >
+                    Get In Touch
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    size="lg"
+                    isIconOnly
+                    aria-label="Download Resume"
+                  >
+                    <FaDownload />
+                  </Button>
+                </div>
+              </Card.Content>
+            </Card>
+          </motion.div>
+
+          {/* Right Column - Stacked Cards */}
+          <div className="lg:col-span-4 space-y-6">
+
+            {/* Social Links Card */}
+            <motion.div
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2, duration: 0.6 }}
+            >
+              <Card variant="secondary" className="p-6">
+                <Card.Header className="p-0 pb-4">
+                  <Card.Title className="text-sm font-medium text-muted uppercase tracking-wider">
+                    Connect
+                  </Card.Title>
+                </Card.Header>
+                <Card.Content className="p-0">
+                  <div className="flex gap-3">
+                    {socialLinks.map((social) => (
+                      <Button
+                        key={social.name}
+                        variant="ghost"
+                        size="lg"
+                        isIconOnly
+                        as="a"
+                        href={social.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="p-2.5 rounded-lg bg-secondary/50 hover:bg-secondary text-foreground/70 hover:text-foreground border border-border/30 hover:border-border/50 transition-all duration-200"
-                        whileHover={{ scale: 1.05, y: -2 }}
-                        whileTap={{ scale: 0.95 }}
-                        aria-label={link.name}
+                        aria-label={social.name}
+                        className="hover:bg-accent/10 hover:text-accent transition-colors"
                       >
-                        <Icon size={18} />
-                      </motion.a>
-                    );
-                  })}
-                </div>
-              </div>
-            </StaggerItem>
-          </StaggerContainer>
+                        {social.name === "GitHub" && <FaGithub className="w-5 h-5" />}
+                        {social.name === "LinkedIn" && <FaLinkedin className="w-5 h-5" />}
+                      </Button>
+                    ))}
+                  </div>
+                </Card.Content>
+              </Card>
+            </motion.div>
 
-          {/* Abstract Hero Animation */}
-          <FadeInSection
-            direction="right"
-            delay={0.3}
-            className="flex justify-center lg:justify-end"
-          >
-            <div className="relative w-full max-w-md lg:max-w-lg xl:max-w-xl aspect-square">
-              <AbstractHero variant="geometric" className="w-full h-full" />
+            {/* Quick Stats */}
+            <div className="grid grid-cols-2 gap-4">
+              <QuickStat
+                icon={HiCode}
+                value="5+"
+                label="Years Exp"
+                delay={0.3}
+              />
+              <QuickStat
+                icon={HiGlobe}
+                value="50+"
+                label="Projects"
+                delay={0.4}
+              />
             </div>
-          </FadeInSection>
-        </motion.div>
 
-        {/* Scroll indicator */}
-        <motion.button
-          onClick={() => scrollToSection("skills")}
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+            {/* Tech Stack Preview Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5, duration: 0.6 }}
+            >
+              <Card
+                variant="tertiary"
+                className="p-6 cursor-pointer hover:scale-[1.02] transition-transform"
+                onClick={() => scrollToSection("skills")}
+              >
+                <Card.Content className="space-y-4 p-0">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-muted uppercase tracking-wider">
+                      Tech Stack
+                    </span>
+                    <HiSparkles className="w-4 h-4 text-accent" />
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {["React", "Next.js", "TypeScript", "Node.js"].map((tech) => (
+                      <Chip key={tech} variant="soft" size="sm">
+                        {tech}
+                      </Chip>
+                    ))}
+                  </div>
+                  <p className="text-sm text-muted">
+                    Click to see all skills →
+                  </p>
+                </Card.Content>
+              </Card>
+            </motion.div>
+          </div>
+        </div>
+
+        {/* Scroll Indicator */}
+        <motion.div
+          className="flex justify-center mt-16"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 1.5 }}
-          aria-label="Scroll to skills section"
+          transition={{ delay: 1, duration: 0.5 }}
         >
-          <span className="text-xs font-medium tracking-wider uppercase">Scroll</span>
-          <motion.div
-            animate={{ y: [0, 6, 0] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
+          <motion.button
+            onClick={() => scrollToSection("skills")}
+            className="p-4 rounded-full bg-surface hover:bg-default transition-colors"
+            animate={{ y: [0, 8, 0] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            aria-label="Scroll to next section"
           >
-            <FaChevronDown size={16} />
-          </motion.div>
-        </motion.button>
-      </div>
+            <svg
+              className="w-5 h-5 text-muted"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 14l-7 7m0 0l-7-7m7 7V3"
+              />
+            </svg>
+          </motion.button>
+        </motion.div>
+      </motion.div>
     </section>
   );
 }
-
-export default Hero;

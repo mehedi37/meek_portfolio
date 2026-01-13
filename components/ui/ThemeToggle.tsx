@@ -2,26 +2,23 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Switch, Label } from "@heroui/react";
-import { FaSun, FaMoon } from "react-icons/fa";
+import { HiSun, HiMoon } from "react-icons/hi";
 
 interface ThemeToggleProps {
   className?: string;
 }
 
 /**
- * Theme toggle button for switching between light and dark modes
- * Persists preference to localStorage
+ * ORBITAL Theme Toggle
+ * Animated toggle with glassmorphism design
  */
 export function ThemeToggle({ className = "" }: ThemeToggleProps) {
   const [theme, setTheme] = useState<"light" | "dark">("dark");
   const [mounted, setMounted] = useState(false);
 
-  // Only render after mounting to avoid hydration mismatch
   useEffect(() => {
     setMounted(true);
 
-    // Check for saved preference or system preference
     const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
     const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
 
@@ -50,17 +47,14 @@ export function ThemeToggle({ className = "" }: ThemeToggleProps) {
     applyTheme(newTheme);
   };
 
-  // Prevent flash of wrong theme
   if (!mounted) {
-    return (
-      <div className={`w-10 h-10 ${className}`} />
-    );
+    return <div className={`w-10 h-10 ${className}`} />;
   }
 
   return (
     <motion.button
       onClick={toggleTheme}
-      className={`relative p-2.5 rounded-full bg-secondary/50 hover:bg-secondary transition-colors ${className}`}
+      className={`relative p-2.5 rounded-xl glass-card hover:bg-[var(--color-accent)]/10 transition-colors ${className}`}
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
       aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
@@ -69,13 +63,14 @@ export function ThemeToggle({ className = "" }: ThemeToggleProps) {
         initial={false}
         animate={{
           rotate: theme === "light" ? 0 : 180,
+          scale: 1,
         }}
         transition={{ type: "spring", stiffness: 200, damping: 10 }}
       >
         {theme === "light" ? (
-          <FaSun className="text-yellow-500" size={18} />
+          <HiSun className="w-5 h-5 text-amber-500" />
         ) : (
-          <FaMoon className="text-blue-400" size={18} />
+          <HiMoon className="w-5 h-5 text-[var(--color-accent)]" />
         )}
       </motion.div>
     </motion.button>

@@ -1,21 +1,72 @@
 "use client";
 
-import { useState } from "react";
-import { motion } from "framer-motion";
-import { FadeInSection, StaggerContainer, StaggerItem } from "@/components/animations";
-import { SocialLinks } from "@/components/ui/SocialLinks";
-import { siteConfig } from "@/lib/constants";
+import { useState, useRef } from "react";
+import { motion, useInView } from "framer-motion";
+import Link from "next/link";
+import {
+  Button,
+  Chip,
+  Card,
+  Form,
+  TextField,
+  Label,
+  Input,
+  TextArea,
+  FieldError,
+  Description,
+  Separator
+} from "@heroui/react";
+import { siteConfig, socialLinks } from "@/lib/constants";
+import {
+  HiMail,
+  HiLocationMarker,
+  HiPhone,
+  HiSparkles,
+  HiPaperAirplane,
+  HiCheck,
+  HiExclamation
+} from "react-icons/hi";
+import { FaGithub, FaLinkedin, FaTwitter } from "react-icons/fa";
 import type { ContactFormData } from "@/types";
-import { FaPaperPlane, FaMapMarkerAlt, FaEnvelope, FaClock, FaCheck } from "react-icons/fa";
 
 interface ContactProps {
   className?: string;
 }
 
+const CONTACT_INFO = [
+  {
+    icon: HiMail,
+    label: "Email",
+    value: siteConfig.links.email,
+    href: `mailto:${siteConfig.links.email}`,
+  },
+  {
+    icon: HiLocationMarker,
+    label: "Location",
+    value: "Remote Worldwide",
+    href: null,
+  },
+  {
+    icon: HiPhone,
+    label: "Response Time",
+    value: "Within 24 hours",
+    href: null,
+  },
+];
+
+const SOCIAL_LINKS = [
+  { name: "GitHub", icon: FaGithub, url: siteConfig.links.github },
+  { name: "LinkedIn", icon: FaLinkedin, url: siteConfig.links.linkedin },
+  { name: "Twitter", icon: FaTwitter, url: siteConfig.links.twitter },
+];
+
 /**
- * Professional contact section with form and social links
+ * Contact Section - Modern form with HeroUI components
  */
 export function Contact({ className = "" }: ContactProps) {
+  const sectionRef = useRef(null);
+  const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
+
   const [formData, setFormData] = useState<ContactFormData>({
     name: "",
     email: "",
@@ -25,14 +76,20 @@ export function Contact({ className = "" }: ContactProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
     setSubmitStatus("idle");
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) throw new Error("Failed to send message");
+
       setSubmitStatus("success");
       setFormData({ name: "", email: "", subject: "", message: "" });
     } catch {
@@ -42,221 +99,254 @@ export function Contact({ className = "" }: ContactProps) {
     }
   };
 
-  const handleChange = (field: keyof ContactFormData, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-
   return (
-    <section id="contact" className={`relative py-24 lg:py-32 ${className}`}>
-      {/* Background */}
-      <div className="absolute inset-0 -z-10">
-        <div className="absolute inset-0 bg-gradient-to-b from-background via-accent/5 to-background" />
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section
+      ref={sectionRef}
+      id="contact"
+      className={`relative py-24 lg:py-32 overflow-hidden bg-background ${className}`}
+    >
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <FadeInSection className="text-center mb-16">
-          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium bg-accent/10 text-accent border border-accent/20 mb-6">
-            <span className="w-1.5 h-1.5 rounded-full bg-accent" />
-            Get in Touch
-          </span>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-4">
+        <motion.div
+          className="text-center mb-16"
+          initial={{ opacity: 0, y: 30 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.6 }}
+        >
+          <Chip color="accent" variant="soft" className="mb-6 gap-2">
+            <HiSparkles className="w-4 h-4" />
+            Get In Touch
+          </Chip>
+          <h2 className="text-4xl lg:text-5xl font-bold mb-4">
             Let&apos;s Work Together
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Have a project in mind? I&apos;d love to hear from you.
+          <p className="text-lg text-muted max-w-2xl mx-auto text-balance">
+            Have a project in mind or just want to chat? I&apos;d love to hear from you.
           </p>
-        </FadeInSection>
+        </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
-          {/* Contact Info */}
-          <FadeInSection direction="left" delay={0.2}>
-            <div className="space-y-8">
-              <div>
-                <h3 className="text-2xl font-bold text-foreground mb-4">Contact Information</h3>
-                <p className="text-muted-foreground leading-relaxed">
-                  Feel free to reach out through any of these channels. 
-                  I typically respond within 24-48 hours.
-                </p>
-              </div>
-
-              <StaggerContainer className="space-y-5" staggerDelay={0.1}>
-                <StaggerItem>
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center flex-shrink-0">
-                      <FaEnvelope className="text-accent" size={20} />
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12">
+          {/* Contact Info - Left Side */}
+          <motion.div
+            className="lg:col-span-2 space-y-6"
+            initial={{ opacity: 0, x: -50 }}
+            animate={isInView ? { opacity: 1, x: 0 } : {}}
+            transition={{ delay: 0.2, duration: 0.6 }}
+          >
+            {/* Info Cards */}
+            <Card variant="secondary" className="p-6">
+              <Card.Content className="space-y-4 p-0">
+                {CONTACT_INFO.map((info, index) => (
+                  <motion.div
+                    key={info.label}
+                    className="flex items-center gap-4 p-3 rounded-lg hover:bg-default/50 transition-colors group"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={isInView ? { opacity: 1, y: 0 } : {}}
+                    transition={{ delay: 0.3 + index * 0.1, duration: 0.5 }}
+                  >
+                    <div className="w-12 h-12 rounded-xl bg-default flex items-center justify-center group-hover:bg-accent group-hover:text-white transition-colors">
+                      <info.icon className="w-5 h-5" />
                     </div>
                     <div>
-                      <h4 className="font-semibold text-foreground">Email</h4>
-                      <a
-                        href={`mailto:${siteConfig.links.email}`}
-                        className="text-muted-foreground hover:text-accent transition-colors text-sm"
-                      >
-                        {siteConfig.links.email}
-                      </a>
-                    </div>
-                  </div>
-                </StaggerItem>
-
-                <StaggerItem>
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center flex-shrink-0">
-                      <FaMapMarkerAlt className="text-accent" size={20} />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-foreground">Location</h4>
-                      <p className="text-muted-foreground text-sm">
-                        San Francisco, CA (Remote OK)
+                      <p className="text-xs text-muted uppercase tracking-wide">
+                        {info.label}
                       </p>
+                      {info.href ? (
+                        <a
+                          href={info.href}
+                          className="text-sm font-medium hover:text-accent transition-colors"
+                        >
+                          {info.value}
+                        </a>
+                      ) : (
+                        <p className="text-sm font-medium">{info.value}</p>
+                      )}
                     </div>
-                  </div>
-                </StaggerItem>
+                  </motion.div>
+                ))}
+              </Card.Content>
+            </Card>
 
-                <StaggerItem>
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center flex-shrink-0">
-                      <FaClock className="text-accent" size={20} />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-foreground">Availability</h4>
-                      <p className="text-muted-foreground text-sm">
-                        Mon - Fri, 9:00 AM - 6:00 PM PST
-                      </p>
-                    </div>
-                  </div>
-                </StaggerItem>
-              </StaggerContainer>
+            {/* Social Links */}
+            <Card variant="tertiary" className="p-6">
+              <Card.Header className="p-0 pb-4">
+                <Card.Title className="text-sm font-medium text-muted uppercase tracking-wider">
+                  Connect with me
+                </Card.Title>
+              </Card.Header>
+              <Card.Content className="p-0">
+                <div className="flex gap-3">
+                  {SOCIAL_LINKS.map((social) => (
+                    <Button
+                      key={social.name}
+                      variant="ghost"
+                      size="lg"
+                      isIconOnly
+                      as="a"
+                      href={social.url || "#"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={social.name}
+                      className="hover:bg-accent/10 hover:text-accent transition-colors"
+                    >
+                      <social.icon className="w-5 h-5" />
+                    </Button>
+                  ))}
+                </div>
+              </Card.Content>
+            </Card>
 
-              {/* Social Links */}
-              <div className="pt-4">
-                <h4 className="font-semibold text-foreground mb-4">Connect With Me</h4>
-                <SocialLinks />
-              </div>
-            </div>
-          </FadeInSection>
-
-          {/* Contact Form */}
-          <FadeInSection direction="right" delay={0.3}>
-            <form
-              onSubmit={handleSubmit}
-              className="p-6 sm:p-8 rounded-2xl bg-card/60 backdrop-blur-sm border border-border/50"
+            {/* Availability Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={isInView ? { opacity: 1, y: 0 } : {}}
+              transition={{ delay: 0.6, duration: 0.5 }}
             >
-              <div className="space-y-5">
-                {/* Name Field */}
-                <div className="space-y-2">
-                  <label htmlFor="name" className="block text-sm font-medium text-foreground">
-                    Your Name <span className="text-accent">*</span>
-                  </label>
-                  <input
-                    id="name"
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => handleChange("name", e.target.value)}
-                    placeholder="John Doe"
-                    required
-                    className="w-full px-4 py-3 rounded-xl bg-secondary/50 border border-border/50 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all"
-                  />
-                </div>
+              <Card variant="default" className="p-6">
+                <Card.Content className="space-y-3 p-0">
+                  <div className="flex items-center gap-3">
+                    <span className="relative flex h-3 w-3">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75" />
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-success" />
+                    </span>
+                    <span className="text-sm font-medium">Available for work</span>
+                  </div>
+                  <p className="text-sm text-muted">
+                    Currently accepting new projects and collaborations. Let&apos;s build something amazing together!
+                  </p>
+                </Card.Content>
+              </Card>
+            </motion.div>
+          </motion.div>
 
-                {/* Email Field */}
-                <div className="space-y-2">
-                  <label htmlFor="email" className="block text-sm font-medium text-foreground">
-                    Email Address <span className="text-accent">*</span>
-                  </label>
-                  <input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => handleChange("email", e.target.value)}
-                    placeholder="john@example.com"
-                    required
-                    className="w-full px-4 py-3 rounded-xl bg-secondary/50 border border-border/50 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all"
-                  />
-                </div>
+          {/* Contact Form - Right Side */}
+          <motion.div
+            className="lg:col-span-3"
+            initial={{ opacity: 0, x: 50 }}
+            animate={isInView ? { opacity: 1, x: 0 } : {}}
+            transition={{ delay: 0.3, duration: 0.6 }}
+          >
+            <Card variant="default" className="p-6 sm:p-8">
+              <Card.Content className="p-0">
+                <Form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    {/* Name */}
+                    <TextField
+                      isRequired
+                      name="name"
+                      value={formData.name}
+                      onChange={(value) => setFormData(prev => ({ ...prev, name: value }))}
+                    >
+                      <Label>Name</Label>
+                      <Input placeholder="Your name" />
+                      <FieldError />
+                    </TextField>
 
-                {/* Subject Field */}
-                <div className="space-y-2">
-                  <label htmlFor="subject" className="block text-sm font-medium text-foreground">
-                    Subject
-                  </label>
-                  <input
-                    id="subject"
-                    type="text"
-                    value={formData.subject || ""}
-                    onChange={(e) => handleChange("subject", e.target.value)}
-                    placeholder="Project Inquiry"
-                    className="w-full px-4 py-3 rounded-xl bg-secondary/50 border border-border/50 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all"
-                  />
-                </div>
+                    {/* Email */}
+                    <TextField
+                      isRequired
+                      name="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={(value) => setFormData(prev => ({ ...prev, email: value }))}
+                      validate={(value) => {
+                        if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(value)) {
+                          return "Please enter a valid email";
+                        }
+                        return null;
+                      }}
+                    >
+                      <Label>Email</Label>
+                      <Input placeholder="your@email.com" />
+                      <FieldError />
+                    </TextField>
+                  </div>
 
-                {/* Message Field */}
-                <div className="space-y-2">
-                  <label htmlFor="message" className="block text-sm font-medium text-foreground">
-                    Message <span className="text-accent">*</span>
-                  </label>
-                  <textarea
-                    id="message"
+                  {/* Subject */}
+                  <TextField
+                    isRequired
+                    name="subject"
+                    fullWidth
+                    value={formData.subject}
+                    onChange={(value) => setFormData(prev => ({ ...prev, subject: value }))}
+                  >
+                    <Label>Subject</Label>
+                    <Input placeholder="What's this about?" />
+                    <FieldError />
+                  </TextField>
+
+                  {/* Message */}
+                  <TextField
+                    isRequired
+                    name="message"
+                    fullWidth
                     value={formData.message}
-                    onChange={(e) => handleChange("message", e.target.value)}
-                    placeholder="Tell me about your project..."
-                    rows={5}
-                    required
-                    className="w-full px-4 py-3 rounded-xl bg-secondary/50 border border-border/50 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all resize-none"
-                  />
-                </div>
+                    onChange={(value) => setFormData(prev => ({ ...prev, message: value }))}
+                  >
+                    <Label>Message</Label>
+                    <TextArea
+                      rows={5}
+                      placeholder="Tell me about your project..."
+                    />
+                    <Description>Min 20 characters</Description>
+                    <FieldError />
+                  </TextField>
 
-                {/* Submit Button */}
-                <motion.button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full flex items-center justify-center gap-2 px-6 py-3.5 text-base font-medium text-white bg-gradient-to-r from-accent to-primary rounded-xl shadow-lg shadow-accent/25 hover:shadow-xl hover:shadow-accent/30 disabled:opacity-70 disabled:cursor-not-allowed transition-all duration-200"
-                  whileHover={!isSubmitting ? { scale: 1.01 } : undefined}
-                  whileTap={!isSubmitting ? { scale: 0.99 } : undefined}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                      </svg>
-                      Sending...
-                    </>
-                  ) : (
-                    <>
-                      Send Message
-                      <FaPaperPlane size={14} />
-                    </>
+                  <Separator />
+
+                  {/* Submit Button */}
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    size="lg"
+                    fullWidth
+                    isPending={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      "Sending..."
+                    ) : submitStatus === "success" ? (
+                      <>
+                        <HiCheck className="w-5 h-5 mr-2" />
+                        Message Sent!
+                      </>
+                    ) : submitStatus === "error" ? (
+                      <>
+                        <HiExclamation className="w-5 h-5 mr-2" />
+                        Try Again
+                      </>
+                    ) : (
+                      <>
+                        Send Message
+                        <HiPaperAirplane className="w-5 h-5 ml-2" />
+                      </>
+                    )}
+                  </Button>
+
+                  {/* Status Messages */}
+                  {submitStatus === "success" && (
+                    <motion.p
+                      className="text-sm text-success text-center"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                    >
+                      Thank you! I&apos;ll get back to you soon.
+                    </motion.p>
                   )}
-                </motion.button>
-
-                {/* Status Messages */}
-                {submitStatus === "success" && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex items-center gap-3 p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-400"
-                  >
-                    <FaCheck size={16} />
-                    <span className="text-sm">Message sent successfully! I&apos;ll get back to you soon.</span>
-                  </motion.div>
-                )}
-
-                {submitStatus === "error" && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-sm"
-                  >
-                    Something went wrong. Please try again or email me directly.
-                  </motion.div>
-                )}
-              </div>
-            </form>
-          </FadeInSection>
+                  {submitStatus === "error" && (
+                    <motion.p
+                      className="text-sm text-danger text-center"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                    >
+                      Something went wrong. Please try again or email me directly.
+                    </motion.p>
+                  )}
+                </Form>
+              </Card.Content>
+            </Card>
+          </motion.div>
         </div>
       </div>
     </section>
   );
 }
-
-export default Contact;

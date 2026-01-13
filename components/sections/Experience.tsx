@@ -1,11 +1,12 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { FadeInSection, StaggerContainer, StaggerItem } from "@/components/animations";
-import { TimelineItem } from "@/components/ui/TimelineItem";
+import { motion, useInView } from "framer-motion";
+import { useRef } from "react";
+import { Chip, Card, Separator } from "@heroui/react";
+import { HiBriefcase, HiLocationMarker, HiCalendar, HiSparkles } from "react-icons/hi";
 import type { Experience as ExperienceType } from "@/lib/supabase/types";
 
-// Demo experience using Supabase Experience type
+// Demo experience
 const DEMO_EXPERIENCES: ExperienceType[] = [
   {
     id: "1",
@@ -50,81 +51,171 @@ interface ExperienceProps {
   experiences?: ExperienceType[];
 }
 
+// Timeline item component with HeroUI Card
+function TimelineCard({
+  experience,
+  index,
+  isLast
+}: {
+  experience: ExperienceType;
+  index: number;
+  isLast: boolean;
+}) {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const isCurrentRole = !experience.end_date;
+
+  const formatDate = (dateStr: string | null) => {
+    if (!dateStr) return "Present";
+    return new Date(dateStr).toLocaleDateString("en-US", {
+      month: "short",
+      year: "numeric"
+    });
+  };
+
+  return (
+    <motion.div
+      ref={ref}
+      className="relative pl-8 md:pl-0 md:grid md:grid-cols-[1fr_auto_1fr] md:gap-8"
+      initial={{ opacity: 0, y: 50 }}
+      animate={isInView ? { opacity: 1, y: 0 } : {}}
+      transition={{ delay: index * 0.2, duration: 0.6, ease: "easeOut" }}
+    >
+      {/* Left side - Date (desktop) */}
+      <div className="hidden md:flex md:flex-col md:items-end md:justify-start md:pt-2">
+        <span className="text-sm font-medium text-accent">
+          {formatDate(experience.start_date)}
+        </span>
+        <span className="text-sm text-muted">
+          — {formatDate(experience.end_date)}
+        </span>
+      </div>
+
+      {/* Center - Timeline line and dot */}
+      <div className="absolute left-0 md:relative md:flex md:flex-col md:items-center">
+        {/* Dot */}
+        <motion.div
+          className={`w-4 h-4 rounded-full border-2 z-10 ${
+            isCurrentRole
+              ? "bg-accent border-accent"
+              : "bg-surface border-default"
+          }`}
+          initial={{ scale: 0 }}
+          animate={isInView ? { scale: 1 } : {}}
+          transition={{ delay: index * 0.2 + 0.3, duration: 0.3, type: "spring" }}
+        >
+          {isCurrentRole && (
+            <span className="absolute inset-0 rounded-full bg-accent animate-ping opacity-50" />
+          )}
+        </motion.div>
+
+        {/* Line */}
+        {!isLast && (
+          <div className="w-px flex-1 bg-separator" />
+        )}
+      </div>
+
+      {/* Right side - Content */}
+      <div className="pb-12">
+        {/* Mobile date */}
+        <div className="md:hidden flex items-center gap-2 text-sm text-muted mb-3">
+          <HiCalendar className="w-4 h-4" />
+          <span>{formatDate(experience.start_date)} — {formatDate(experience.end_date)}</span>
+        </div>
+
+        {/* Card */}
+        <Card variant="default" className="p-6 hover:scale-[1.02] transition-transform group">
+          <Card.Content className="space-y-4 p-0">
+            {/* Current role badge */}
+            {isCurrentRole && (
+              <Chip color="success" variant="soft" size="sm" className="gap-1">
+                <HiSparkles className="w-3 h-3" />
+                Current Role
+              </Chip>
+            )}
+
+            {/* Position & Company */}
+            <div>
+              <h3 className="text-xl font-semibold mb-1 group-hover:text-accent transition-colors">
+                {experience.position}
+              </h3>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
+                <span className="flex items-center gap-1.5">
+                  <HiBriefcase className="w-4 h-4 text-accent" />
+                  {experience.company}
+                </span>
+                {experience.location && (
+                  <span className="flex items-center gap-1.5">
+                    <HiLocationMarker className="w-4 h-4 text-accent" />
+                    {experience.location}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Description */}
+            <p className="text-muted text-sm leading-relaxed">
+              {experience.description}
+            </p>
+
+            {/* Technologies */}
+            {experience.technologies && experience.technologies.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {experience.technologies.map((tech) => (
+                  <Chip key={tech} variant="soft" size="sm">
+                    {tech}
+                  </Chip>
+                ))}
+              </div>
+            )}
+          </Card.Content>
+        </Card>
+      </div>
+    </motion.div>
+  );
+}
+
 /**
- * Professional experience section with timeline
+ * Experience Section - Timeline with HeroUI Cards
  */
 export function Experience({ className = "", experiences = DEMO_EXPERIENCES }: ExperienceProps) {
   return (
-    <section id="experience" className={`relative py-24 lg:py-32 ${className}`}>
-      {/* Background */}
-      <div className="absolute inset-0 -z-10">
-        <div className="absolute inset-0 bg-gradient-to-b from-background via-secondary/20 to-background" />
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="experience" className={`relative py-24 lg:py-32 overflow-hidden bg-background ${className}`}>
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <FadeInSection className="text-center mb-16">
-          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium bg-accent/10 text-accent border border-accent/20 mb-6">
-            <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+        <motion.div
+          className="text-center mb-16"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
+          <Chip color="accent" variant="soft" className="mb-6 gap-2">
+            <HiBriefcase className="w-4 h-4" />
             Experience
-          </span>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-4">
+          </Chip>
+          <h2 className="text-4xl lg:text-5xl font-bold mb-4">
             Professional Journey
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            A timeline of my career growth and key achievements.
+          <p className="text-lg text-muted max-w-2xl mx-auto text-balance">
+            A timeline of my career growth, key achievements, and the impact I&apos;ve made.
           </p>
-        </FadeInSection>
+        </motion.div>
 
         {/* Timeline */}
-        <div className="relative max-w-4xl mx-auto">
-          {/* Timeline line */}
-          <div className="absolute left-4 md:left-1/2 top-0 bottom-0 w-px bg-border/60" />
-
-          <StaggerContainer className="space-y-12" staggerDelay={0.15}>
-            {experiences.map((experience, index) => (
-              <StaggerItem key={experience.id}>
-                <TimelineItem
-                  experience={experience}
-                  index={index}
-                  isLeft={index % 2 === 0}
-                />
-              </StaggerItem>
-            ))}
-          </StaggerContainer>
+        <div className="relative">
+          {experiences.map((exp, index) => (
+            <TimelineCard
+              key={exp.id}
+              experience={exp}
+              index={index}
+              isLast={index === experiences.length - 1}
+            />
+          ))}
         </div>
-
-        {/* Career Stats */}
-        <FadeInSection delay={0.4} className="mt-20">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6">
-            {[
-              { value: "5+", label: "Years Experience" },
-              { value: "30+", label: "Projects Completed" },
-              { value: "15+", label: "Happy Clients" },
-              { value: "10+", label: "Technologies" },
-            ].map((stat, index) => (
-              <motion.div
-                key={stat.label}
-                className="p-6 rounded-2xl bg-card/60 backdrop-blur-sm border border-border/50 text-center"
-                whileHover={{ y: -4, boxShadow: "0 20px 40px -20px rgba(0,0,0,0.1)" }}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <div className="text-3xl sm:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-accent to-primary mb-2">
-                  {stat.value}
-                </div>
-                <div className="text-sm text-muted-foreground font-medium">
-                  {stat.label}
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </FadeInSection>
       </div>
     </section>
   );
 }
-
-export default Experience;

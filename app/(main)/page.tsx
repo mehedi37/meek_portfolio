@@ -3,15 +3,14 @@ import {
   Skills,
   Projects,
   Experience,
-  Certifications,
   BlogPreview,
   Contact,
 } from "@/components/sections";
 import { ScrollProgress } from "@/components/animations";
 
 /**
- * Home page with all main sections
- * Professional portfolio layout with smooth scroll progress
+ * ORBITAL Portfolio - Home Page
+ * Modern, immersive portfolio with glassmorphism design
  */
 export default function HomePage() {
   return (
@@ -19,25 +18,22 @@ export default function HomePage() {
       {/* Scroll progress indicator */}
       <ScrollProgress />
 
-      {/* Hero Section */}
+      {/* Hero Section - Introduction */}
       <Hero />
 
-      {/* Skills Section */}
+      {/* Skills Section - Technical expertise */}
       <Skills />
 
-      {/* Projects Section */}
+      {/* Projects Section - Featured work */}
       <Projects />
 
-      {/* Experience Section */}
+      {/* Experience Section - Professional timeline */}
       <Experience />
 
-      {/* Certifications Section */}
-      <Certifications />
-
-      {/* Blog Preview Section */}
+      {/* Blog Preview Section - Latest articles */}
       <BlogPreview />
 
-      {/* Contact Section */}
+      {/* Contact Section - Get in touch */}
       <Contact />
     </>
   );

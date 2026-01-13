@@ -1,8 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import { Navbar, Footer } from "@/components/ui";
-import { ScrollProgress } from "@/components/animations";
 import { siteConfig } from "@/lib/constants";
 import { Analytics } from "@vercel/analytics/react";
 
@@ -95,6 +93,11 @@ interface RootLayoutProps {
   children: React.ReactNode;
 }
 
+/**
+ * Root Layout
+ * Provides base HTML structure, fonts, and theme initialization
+ * Child layouts handle specific UI (navbar, footer, etc.)
+ */
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html
@@ -134,19 +137,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
           Skip to main content
         </a>
 
-        {/* Scroll progress indicator */}
-        <ScrollProgress />
-
-        {/* Navigation */}
-        <Navbar />
-
-        {/* Main content */}
-        <main id="main-content" className="relative">
-          {children}
-        </main>
-
-        {/* Footer */}
-        <Footer />
+        {children}
 
         {/* Analytics - only in production */}
         <Analytics />

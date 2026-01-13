@@ -23,8 +23,8 @@ interface SocialLinksProps {
 }
 
 /**
- * Social media links with icons and hover effects
- * Configurable size and layout
+ * ORBITAL Social Links
+ * Glass morphism design with gradient hover effects
  */
 export function SocialLinks({
   className = "",
@@ -33,9 +33,9 @@ export function SocialLinks({
   vertical = false,
 }: SocialLinksProps) {
   const sizeClasses = {
-    sm: "p-2 text-sm",
-    md: "p-3 text-base",
-    lg: "p-4 text-lg",
+    sm: "p-2.5",
+    md: "p-3",
+    lg: "p-4",
   };
 
   const iconSizes = {
@@ -57,16 +57,18 @@ export function SocialLinks({
             href={link.url}
             target="_blank"
             rel="noopener noreferrer"
-            className={`flex items-center gap-2 rounded-full bg-secondary/50 hover:bg-secondary text-foreground hover:text-accent transition-colors ${sizeClasses[size]}`}
+            className={`flex items-center gap-2 rounded-xl glass-card text-[var(--muted-foreground)] hover:text-[var(--color-accent)] hover:bg-[var(--color-accent)]/10 transition-all duration-300 ${sizeClasses[size]}`}
             whileHover={{ scale: 1.05, y: -2 }}
             whileTap={{ scale: 0.95 }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
+            transition={{ delay: index * 0.1, duration: 0.4 }}
             aria-label={link.name}
           >
             <IconComponent size={iconSizes[size]} />
-            {showLabels && <span>{link.name}</span>}
+            {showLabels && (
+              <span className="text-sm font-medium">{link.name}</span>
+            )}
           </motion.a>
         );
       })}

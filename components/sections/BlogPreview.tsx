@@ -1,14 +1,14 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { FadeInSection, StaggerContainer, StaggerItem } from "@/components/animations";
-import { BlogCard } from "@/components/ui/BlogCard";
-import type { BlogPost } from "@/lib/supabase/types";
-import { FaArrowRight, FaPen } from "react-icons/fa";
+import { motion, useInView } from "framer-motion";
+import { useRef } from "react";
 import Link from "next/link";
+import { Card, Chip, Button } from "@heroui/react";
+import { FaArrowRight, FaPen, FaClock } from "react-icons/fa";
+import { HiSparkles } from "react-icons/hi";
+import type { BlogPost } from "@/lib/supabase/types";
 
-// Demo blog posts using Supabase BlogPost type with snake_case field names
-// In production, fetch from Supabase using: supabase.from('blog_posts').select('*')
+// Demo blog posts
 const DEMO_POSTS: BlogPost[] = [
   {
     id: "1",
@@ -63,68 +63,141 @@ interface BlogPreviewProps {
   limit?: number;
 }
 
+// Blog card component using HeroUI Card
+function BlogPostCard({ post, index }: { post: BlogPost; index: number }) {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-100px" });
+
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  return (
+    <motion.article
+      ref={ref}
+      initial={{ opacity: 0, y: 30 }}
+      animate={isInView ? { opacity: 1, y: 0 } : {}}
+      transition={{ delay: index * 0.1, duration: 0.5 }}
+    >
+      <Link href={`/blog/${post.slug}`}>
+        <Card variant="default" className="h-full overflow-hidden hover:scale-[1.02] transition-transform group">
+          {/* Image */}
+          {post.cover_image && (
+            <div className="relative h-48 overflow-hidden">
+              <img
+                src={post.cover_image}
+                alt={post.title}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              <div className="absolute inset-0 bg-linear-to-t from-surface via-transparent to-transparent" />
+            </div>
+          )}
+
+          <Card.Content className="p-6 space-y-4">
+            {/* Tags */}
+            {post.tags && post.tags.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {post.tags.slice(0, 2).map((tag) => (
+                  <Chip key={tag} variant="soft" size="sm" color="accent">
+                    {tag}
+                  </Chip>
+                ))}
+              </div>
+            )}
+
+            {/* Title */}
+            <h3 className="text-lg font-semibold line-clamp-2 group-hover:text-accent transition-colors">
+              {post.title}
+            </h3>
+
+            {/* Excerpt */}
+            <p className="text-sm text-muted line-clamp-2">
+              {post.excerpt}
+            </p>
+
+            {/* Meta */}
+            <div className="flex items-center justify-between text-xs text-muted pt-2">
+              <span>{formatDate(post.published_at || post.created_at)}</span>
+              <span className="flex items-center gap-1">
+                <FaClock className="w-3 h-3" />
+                {post.reading_time} min read
+              </span>
+            </div>
+          </Card.Content>
+        </Card>
+      </Link>
+    </motion.article>
+  );
+}
+
 /**
- * Blog preview section showing latest posts
- * Links to full blog page for more content
+ * Blog Preview Section - Latest articles with HeroUI Cards
  */
 export function BlogPreview({
   className = "",
   posts = DEMO_POSTS,
   limit = 3,
 }: BlogPreviewProps) {
+  const sectionRef = useRef(null);
+  const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
   const displayPosts = posts.slice(0, limit);
 
   return (
     <section
+      ref={sectionRef}
       id="blog"
-      className={`relative py-20 lg:py-32 ${className}`}
+      className={`relative py-24 lg:py-32 overflow-hidden bg-background ${className}`}
     >
-      {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-background via-secondary/10 to-background -z-10" />
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <FadeInSection className="text-center mb-16">
-          <motion.span
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-accent/10 text-accent border border-accent/20 mb-6"
-          >
-            <FaPen size={12} />
+        <motion.div
+          className="text-center mb-16"
+          initial={{ opacity: 0, y: 30 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.6 }}
+        >
+          <Chip color="accent" variant="soft" className="mb-6 gap-2">
+            <FaPen className="w-3 h-3" />
             Blog
-          </motion.span>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6">
-            Latest{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-primary">
-              Articles
-            </span>
+          </Chip>
+          <h2 className="text-4xl lg:text-5xl font-bold mb-4">
+            Latest Articles
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg text-muted max-w-2xl mx-auto text-balance">
             Thoughts, tutorials, and insights on web development, design,
             and technology. Sharing what I learn along the way.
           </p>
-        </FadeInSection>
+        </motion.div>
 
         {/* Blog Grid */}
-        <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
           {displayPosts.map((post, index) => (
-            <StaggerItem key={post.slug}>
-              <BlogCard post={post} index={index} />
-            </StaggerItem>
+            <BlogPostCard key={post.slug} post={post} index={index} />
           ))}
-        </StaggerContainer>
+        </div>
 
         {/* View All Button */}
-        <FadeInSection delay={0.3} className="text-center">
-          <Link 
+        <motion.div
+          className="text-center"
+          initial={{ opacity: 0, y: 20 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ delay: 0.4, duration: 0.5 }}
+        >
+          <Button
+            as={Link}
             href="/blog"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 text-foreground font-medium hover:border-accent/30 hover:bg-accent/5 transition-all duration-300 group"
+            variant="secondary"
+            size="lg"
+            className="group"
           >
             View All Articles
-            <FaArrowRight 
-              size={14} 
-              className="group-hover:translate-x-1 transition-transform duration-200" 
-            />
-          </Link>
-        </FadeInSection>
+            <FaArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
+          </Button>
+        </motion.div>
       </div>
     </section>
   );

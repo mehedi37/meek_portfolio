@@ -105,7 +105,7 @@ export default function AdminLoginPage() {
                 onChange={setUsername}
                 className="w-full"
               >
-                <Label className="flex items-center gap-2 mb-1">
+                <Label>
                   <FaUser className="w-3 h-3 text-muted" />
                   Username
                 </Label>
