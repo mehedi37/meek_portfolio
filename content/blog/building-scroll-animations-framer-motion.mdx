@@ -1,0 +1,130 @@
+---
+title: "Building Scroll-Triggered Animations with Framer Motion"
+excerpt: "Learn how to create engaging scroll-based animations that respond to user scrolling using Framer Motion's useScroll and useTransform hooks."
+publishedAt: "2024-01-15"
+tags: ["React", "Framer Motion", "Animation", "Tutorial"]
+coverImage: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800"
+featured: true
+---
+
+# Building Scroll-Triggered Animations with Framer Motion
+
+Scroll-triggered animations are a powerful way to create engaging user experiences. They can guide users through your content, highlight important information, and add a layer of polish to your website that makes it memorable.
+
+In this tutorial, we'll explore how to use Framer Motion's `useScroll` and `useTransform` hooks to create beautiful, performant animations.
+
+## Prerequisites
+
+Before we start, make sure you have:
+- A React project set up (preferably with Next.js)
+- Basic knowledge of React hooks
+- Framer Motion installed
+
+```bash
+npm install framer-motion
+```
+
+## Understanding useScroll
+
+The `useScroll` hook provides scroll progress values that update as the user scrolls. It returns several useful values:
+
+```tsx
+import { useScroll } from "framer-motion";
+
+function ScrollComponent() {
+  const {
+    scrollY,         // Absolute scroll position in pixels
+    scrollYProgress, // Scroll progress between 0 and 1
+    scrollX,         // Horizontal scroll position
+    scrollXProgress, // Horizontal scroll progress
+  } = useScroll();
+
+  // scrollYProgress goes from 0 (top) to 1 (bottom)
+  return <div>Scroll me!</div>;
+}
+```
+
+## Using useTransform
+
+The `useTransform` hook maps one value range to another. This is perfect for converting scroll progress into animation values:
+
+```tsx
+import { useScroll, useTransform, motion } from "framer-motion";
+
+function FadeOnScroll() {
+  const { scrollYProgress } = useScroll();
+
+  // Fade out as user scrolls from 0% to 50%
+  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+
+  // Scale down from 100% to 80%
+  const scale = useTransform(scrollYProgress, [0, 0.5], [1, 0.8]);
+
+  return (
+    <motion.div style={{ opacity, scale }}>
+      This fades and scales as you scroll
+    </motion.div>
+  );
+}
+```
+
+## Adding Spring Physics
+
+For smoother animations, wrap your transforms with `useSpring`:
+
+```tsx
+import { useScroll, useTransform, useSpring, motion } from "framer-motion";
+
+function SmoothScrollAnimation() {
+  const { scrollYProgress } = useScroll();
+
+  // Create a smooth spring-animated version
+  const smoothProgress = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001
+  });
+
+  const opacity = useTransform(smoothProgress, [0, 0.5], [1, 0]);
+
+  return (
+    <motion.div style={{ opacity }}>
+      Smooth animation!
+    </motion.div>
+  );
+}
+```
+
+## Creating a Progress Indicator
+
+Here's a practical example - a scroll progress bar:
+
+```tsx
+import { useScroll, motion } from "framer-motion";
+
+function ProgressBar() {
+  const { scrollYProgress } = useScroll();
+
+  return (
+    <motion.div
+      className="fixed top-0 left-0 h-1 bg-blue-500 origin-left"
+      style={{ scaleX: scrollYProgress }}
+    />
+  );
+}
+```
+
+## Best Practices
+
+1. **Use GPU-accelerated properties**: Stick to `transform` and `opacity` for best performance
+2. **Add `will-change`**: Hint to the browser about animations
+3. **Respect reduced motion**: Check `prefers-reduced-motion`
+4. **Test on various devices**: Scroll behavior varies
+
+## Conclusion
+
+Scroll-triggered animations can significantly enhance user experience when implemented thoughtfully. Framer Motion makes it easy to create these effects while maintaining good performance.
+
+The key is to use them purposefully - animations should guide users and enhance understanding, not distract from your content.
+
+Happy animating! 🎨

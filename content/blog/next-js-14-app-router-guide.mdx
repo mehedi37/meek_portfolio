@@ -1,0 +1,180 @@
+---
+title: "Complete Guide to Next.js 14 App Router"
+excerpt: "Everything you need to know about the new App Router in Next.js 14, including server components, loading states, and error handling."
+publishedAt: "2024-01-10"
+tags: ["Next.js", "React", "Web Development"]
+coverImage: "https://images.unsplash.com/photo-1618477388954-7852f32655ec?w=800"
+featured: true
+---
+
+# Complete Guide to Next.js 14 App Router
+
+Next.js 14 brings significant improvements to the App Router architecture, making it the recommended way to build new Next.js applications. Let's dive deep into its features and best practices.
+
+## Server Components by Default
+
+In the App Router, all components are Server Components by default. This means they render on the server and send HTML to the client:
+
+```tsx
+// app/posts/page.tsx - This is a Server Component!
+async function BlogPosts() {
+  // You can directly query your database
+  const posts = await db.query("SELECT * FROM posts");
+
+  return (
+    <ul>
+      {posts.map(post => (
+        <li key={post.id}>{post.title}</li>
+      ))}
+    </ul>
+  );
+}
+
+export default BlogPosts;
+```
+
+### Benefits of Server Components
+
+- **Reduced bundle size**: Server-only code never reaches the client
+- **Direct database access**: No need for API routes for data fetching
+- **Security**: Sensitive operations stay on the server
+- **Streaming**: Content can be progressively rendered
+
+## Client Components
+
+When you need interactivity, use the `"use client"` directive:
+
+```tsx
+"use client";
+
+import { useState } from "react";
+
+export function LikeButton({ postId }: { postId: string }) {
+  const [likes, setLikes] = useState(0);
+
+  return (
+    <button onClick={() => setLikes(likes + 1)}>
+      ❤️ {likes}
+    </button>
+  );
+}
+```
+
+### When to Use Client Components
+
+- Event listeners (onClick, onChange, etc.)
+- useState, useEffect, or other hooks
+- Browser-only APIs
+- Custom hooks that use state or effects
+
+## Loading States
+
+Create instant loading UI with `loading.tsx`:
+
+```tsx
+// app/blog/loading.tsx
+export default function Loading() {
+  return (
+    <div className="grid gap-4">
+      {[1, 2, 3].map(i => (
+        <div key={i} className="h-24 bg-gray-200 animate-pulse rounded" />
+      ))}
+    </div>
+  );
+}
+```
+
+The loading state automatically wraps your page in a Suspense boundary.
+
+## Error Handling
+
+Handle errors gracefully with `error.tsx`:
+
+```tsx
+"use client";
+
+export default function Error({
+  error,
+  reset,
+}: {
+  error: Error;
+  reset: () => void;
+}) {
+  return (
+    <div className="p-4 bg-red-50 rounded">
+      <h2>Something went wrong!</h2>
+      <button onClick={() => reset()}>Try again</button>
+    </div>
+  );
+}
+```
+
+## Metadata API
+
+Set SEO metadata easily:
+
+```tsx
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "My Blog",
+  description: "A blog about web development",
+  openGraph: {
+    title: "My Blog",
+    description: "A blog about web development",
+    images: ["/og-image.png"],
+  },
+};
+```
+
+## Route Groups
+
+Organize routes without affecting the URL:
+
+```
+app/
+├── (marketing)/
+│   ├── about/page.tsx    → /about
+│   └── contact/page.tsx  → /contact
+├── (shop)/
+│   ├── products/page.tsx → /products
+│   └── cart/page.tsx     → /cart
+```
+
+## Parallel Routes
+
+Render multiple pages simultaneously:
+
+```
+app/
+├── @analytics/page.tsx
+├── @team/page.tsx
+└── layout.tsx
+```
+
+```tsx
+// layout.tsx
+export default function Layout({
+  children,
+  analytics,
+  team,
+}: {
+  children: React.ReactNode;
+  analytics: React.ReactNode;
+  team: React.ReactNode;
+}) {
+  return (
+    <>
+      {children}
+      {analytics}
+      {team}
+    </>
+  );
+}
+```
+
+## Conclusion
+
+The App Router provides a more intuitive and powerful way to build Next.js applications. Its file-based routing, combined with Server Components and streaming, makes it easier to build fast, SEO-friendly web applications.
+
+Start with Server Components by default, and only add client interactivity where needed. This approach leads to better performance and a smoother user experience.
