@@ -242,12 +242,12 @@ export default function SkillCategoriesPage() {
       )}
 
       {/* Add/Edit Modal */}
-      <Modal.Backdrop isOpen={isModalOpen} onOpenChange={setIsModalOpen}>
-        <Modal.Container>
-          <Modal.Dialog className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+      <Modal.Backdrop variant="opaque" isOpen={isModalOpen} onOpenChange={setIsModalOpen}>
+        <Modal.Container size="md" scroll="outside">
+          <Modal.Dialog>
             <Modal.CloseTrigger />
             <Modal.Header>
-              <Modal.Heading>
+              <Modal.Heading className="mb-2 text-center">
                 {editingCategory?.id ? "Edit Category" : "Add New Category"}
               </Modal.Heading>
             </Modal.Header>

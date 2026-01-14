@@ -1,11 +1,30 @@
 "use client";
 
-import { motion, useScroll, useTransform, useSpring, useMotionValue } from "framer-motion";
+import {
+  motion,
+  useScroll,
+  useTransform,
+  useSpring,
+  useMotionValue,
+} from "framer-motion";
 import { useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { Button, Avatar, Chip, Card } from "@heroui/react";
-import { FaGithub, FaLinkedin, FaTwitter, FaArrowRight, FaDownload } from "react-icons/fa";
-import { HiSparkles, HiLocationMarker, HiLightningBolt, HiCode, HiGlobe } from "react-icons/hi";
+import { Button, Avatar, Chip, Card, Tooltip } from "@heroui/react";
+import {
+  FaGithub,
+  FaLinkedin,
+  FaTwitter,
+  FaArrowRight,
+  FaDownload,
+  FaCalendarCheck,
+} from "react-icons/fa";
+import {
+  HiSparkles,
+  HiLocationMarker,
+  HiLightningBolt,
+  HiCode,
+  HiGlobe,
+} from "react-icons/hi";
 import type { SiteProfile, SocialLink } from "@/lib/supabase/types";
 import { IconRenderer } from "@/components/admin/IconSearch";
 
@@ -20,11 +39,16 @@ function GradientBlob({
   size = 400,
   color = "accent",
   position = "top-left",
-  delay = 0
+  delay = 0,
 }: {
   size?: number;
   color?: string;
-  position?: "top-left" | "top-right" | "bottom-left" | "bottom-right" | "center";
+  position?:
+    | "top-left"
+    | "top-right"
+    | "bottom-left"
+    | "bottom-right"
+    | "center";
   delay?: number;
 }) {
   const positionClasses = {
@@ -32,7 +56,7 @@ function GradientBlob({
     "top-right": "top-0 right-0 translate-x-1/2 -translate-y-1/2",
     "bottom-left": "bottom-0 left-0 -translate-x-1/2 translate-y-1/2",
     "bottom-right": "bottom-0 right-0 translate-x-1/2 translate-y-1/2",
-    "center": "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
+    center: "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
   };
 
   return (
@@ -51,20 +75,40 @@ function GradientBlob({
         ease: "easeInOut",
       }}
     >
-      <div className={`w-full h-full rounded-full ${color === "accent" ? "bg-accent" : "bg-success"}`} />
+      <div
+        className={`w-full h-full rounded-full ${
+          color === "accent" ? "bg-accent" : "bg-success"
+        }`}
+      />
     </motion.div>
   );
 }
 
 // Status badge with pulse animation
-function StatusBadge({ status, statusColor = "success" }: { status?: string | null; statusColor?: string | null }) {
+function StatusBadge({
+  status,
+  statusColor = "success",
+}: {
+  status?: string | null;
+  statusColor?: string | null;
+}) {
   const displayStatus = status || "Open to opportunities";
-  const colorClass = statusColor === "success" ? "bg-success" :
-                     statusColor === "warning" ? "bg-warning" :
-                     statusColor === "danger" ? "bg-danger" : "bg-accent";
-  const chipColor = statusColor === "success" ? "success" :
-                    statusColor === "warning" ? "warning" :
-                    statusColor === "danger" ? "danger" : "default";
+  const colorClass =
+    statusColor === "success"
+      ? "bg-success"
+      : statusColor === "warning"
+      ? "bg-warning"
+      : statusColor === "danger"
+      ? "bg-danger"
+      : "bg-accent";
+  const chipColor =
+    statusColor === "success"
+      ? "success"
+      : statusColor === "warning"
+      ? "warning"
+      : statusColor === "danger"
+      ? "danger"
+      : "default";
 
   return (
     <motion.div
@@ -72,10 +116,18 @@ function StatusBadge({ status, statusColor = "success" }: { status?: string | nu
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2, duration: 0.5 }}
     >
-      <Chip color={chipColor as "success" | "warning" | "danger" | "default"} variant="soft" className="gap-2">
+      <Chip
+        color={chipColor as "success" | "warning" | "danger" | "default"}
+        variant="soft"
+        className="gap-2"
+      >
         <span className="relative flex h-2 w-2">
-          <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${colorClass} opacity-75`} />
-          <span className={`relative inline-flex rounded-full h-2 w-2 ${colorClass}`} />
+          <span
+            className={`animate-ping absolute inline-flex h-full w-full rounded-full ${colorClass} opacity-75`}
+          />
+          <span
+            className={`relative inline-flex rounded-full h-2 w-2 ${colorClass}`}
+          />
         </span>
         {displayStatus}
       </Chip>
@@ -88,7 +140,7 @@ function QuickStat({
   icon: Icon,
   value,
   label,
-  delay = 0
+  delay = 0,
 }: {
   icon: React.ElementType;
   value: string;
@@ -101,7 +153,10 @@ function QuickStat({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.5 }}
     >
-      <Card variant="secondary" className="p-4 text-center hover:scale-105 transition-transform cursor-default">
+      <Card
+        variant="secondary"
+        className="p-4 text-center hover:scale-105 transition-transform cursor-default"
+      >
         <Card.Content className="space-y-2 p-0">
           <Icon className="w-5 h-5 mx-auto text-accent" />
           <div className="text-2xl font-bold">{value}</div>
@@ -124,8 +179,12 @@ export function Hero({ className = "", profile, socialLinks = [] }: HeroProps) {
   const name = profile?.full_name || "Your Name";
   const shortName = profile?.short_name || "YN";
   const tagline = profile?.tagline || "Full Stack Developer";
-  const aboutMe = profile?.about_me || "I craft beautiful, performant digital experiences that blend creativity with clean code.";
-  const profileImage = profile?.profile_image || "https://img.heroui.chat/image/avatar?w=400&h=400&u=1";
+  const aboutMe =
+    profile?.about_me ||
+    "I craft beautiful, performant digital experiences that blend creativity with clean code.";
+  const profileImage =
+    profile?.profile_image ||
+    "https://img.heroui.chat/image/avatar?w=400&h=400&u=1";
   const location = profile?.location || "Remote Worldwide";
   const yearsExperience = profile?.years_experience ?? 5;
   const completedProjects = profile?.completed_projects ?? 50;
@@ -146,12 +205,15 @@ export function Hero({ className = "", profile, socialLinks = [] }: HeroProps) {
   const mouseX = useSpring(useMotionValue(0), { stiffness: 50, damping: 20 });
   const mouseY = useSpring(useMotionValue(0), { stiffness: 50, damping: 20 });
 
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    const { clientX, clientY } = e;
-    const { innerWidth, innerHeight } = window;
-    mouseX.set((clientX - innerWidth / 2) / 50);
-    mouseY.set((clientY - innerHeight / 2) / 50);
-  }, [mouseX, mouseY]);
+  const handleMouseMove = useCallback(
+    (e: MouseEvent) => {
+      const { clientX, clientY } = e;
+      const { innerWidth, innerHeight } = window;
+      mouseX.set((clientX - innerWidth / 2) / 50);
+      mouseY.set((clientY - innerHeight / 2) / 50);
+    },
+    [mouseX, mouseY]
+  );
 
   useEffect(() => {
     window.addEventListener("mousemove", handleMouseMove);
@@ -173,8 +235,18 @@ export function Hero({ className = "", profile, socialLinks = [] }: HeroProps) {
     >
       {/* Animated Background */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
-        <GradientBlob size={600} color="accent" position="top-right" delay={0} />
-        <GradientBlob size={500} color="success" position="bottom-left" delay={2} />
+        <GradientBlob
+          size={600}
+          color="accent"
+          position="top-right"
+          delay={0}
+        />
+        <GradientBlob
+          size={500}
+          color="success"
+          position="bottom-left"
+          delay={2}
+        />
 
         {/* Subtle grid pattern */}
         <div
@@ -182,7 +254,7 @@ export function Hero({ className = "", profile, socialLinks = [] }: HeroProps) {
           style={{
             backgroundImage: `linear-gradient(var(--foreground) 1px, transparent 1px),
                              linear-gradient(90deg, var(--foreground) 1px, transparent 1px)`,
-            backgroundSize: '60px 60px',
+            backgroundSize: "60px 60px",
           }}
         />
       </div>
@@ -194,7 +266,6 @@ export function Hero({ className = "", profile, socialLinks = [] }: HeroProps) {
       >
         {/* Bento Grid Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-
           {/* Main Profile Card - Spans 8 columns */}
           <motion.div
             className="lg:col-span-8"
@@ -212,13 +283,10 @@ export function Hero({ className = "", profile, socialLinks = [] }: HeroProps) {
                   <motion.div
                     className="relative"
                     whileHover={{ scale: 1.05 }}
-                    transition={{ type: "spring", stiffness: 300 }}
+                    transition={{ type: "spring", stiffness: 600 }}
                   >
                     <Avatar className="size-24 lg:size-28 ring-4 ring-surface ring-offset-2 ring-offset-background">
-                      <Avatar.Image
-                        alt={name}
-                        src={profileImage}
-                      />
+                      <Avatar.Image alt={name} src={profileImage} />
                       <Avatar.Fallback className="text-2xl font-bold bg-accent text-white">
                         {shortName}
                       </Avatar.Fallback>
@@ -277,15 +345,22 @@ export function Hero({ className = "", profile, socialLinks = [] }: HeroProps) {
                   </Button>
 
                   {resumeUrl && (
-                    <Link
-                      href={resumeUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label="Download Resume"
-                      className="inline-flex items-center justify-center rounded-full bg-surface hover:bg-default w-12 h-12 transition-colors"
-                    >
-                      <FaDownload className="w-5 h-5" />
-                    </Link>
+                    <Tooltip delay={0} closeDelay={100}>
+                      <Tooltip.Content>
+                        <p>My Resume</p>
+                      </Tooltip.Content>
+                      <Button isIconOnly variant="ghost">
+                        <Link
+                          href={resumeUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label="Download Resume"
+                          className="inline-flex items-center justify-center rounded-full bg-surface hover:bg-default w-12 h-12 transition-colors"
+                        >
+                          <FaDownload className="w-5 h-5" />
+                        </Link>
+                      </Button>
+                    </Tooltip>
                   )}
                 </div>
               </Card.Content>
@@ -294,7 +369,6 @@ export function Hero({ className = "", profile, socialLinks = [] }: HeroProps) {
 
           {/* Right Column - Stacked Cards */}
           <div className="lg:col-span-4 space-y-6">
-
             {/* Social Links Card */}
             <motion.div
               initial={{ opacity: 0, x: 50 }}
@@ -320,7 +394,10 @@ export function Hero({ className = "", profile, socialLinks = [] }: HeroProps) {
                           className="inline-flex items-center justify-center rounded-full bg-surface hover:bg-accent/10 hover:text-accent w-12 h-12 transition-colors"
                         >
                           {social.icon ? (
-                            <IconRenderer name={social.icon} className="w-5 h-5" />
+                            <IconRenderer
+                              name={social.icon}
+                              className="w-5 h-5"
+                            />
                           ) : social.platform === "GitHub" ? (
                             <FaGithub className="w-5 h-5" />
                           ) : social.platform === "LinkedIn" ? (
@@ -358,13 +435,13 @@ export function Hero({ className = "", profile, socialLinks = [] }: HeroProps) {
             {/* Quick Stats */}
             <div className="grid grid-cols-2 gap-4">
               <QuickStat
-                icon={HiCode}
+                icon={FaCalendarCheck}
                 value={`${yearsExperience}+`}
                 label="Years Exp"
                 delay={0.3}
               />
               <QuickStat
-                icon={HiGlobe}
+                icon={HiCode}
                 value={`${completedProjects}+`}
                 label="Projects"
                 delay={0.4}
@@ -390,11 +467,13 @@ export function Hero({ className = "", profile, socialLinks = [] }: HeroProps) {
                     <HiSparkles className="w-4 h-4 text-accent" />
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {["React", "Next.js", "TypeScript", "Node.js"].map((tech) => (
-                      <Chip key={tech} variant="soft" size="sm">
-                        {tech}
-                      </Chip>
-                    ))}
+                    {["React", "Next.js", "TypeScript", "Node.js"].map(
+                      (tech) => (
+                        <Chip key={tech} variant="soft" size="sm">
+                          {tech}
+                        </Chip>
+                      )
+                    )}
                   </div>
                   <p className="text-sm text-muted">
                     Click to see all skills →

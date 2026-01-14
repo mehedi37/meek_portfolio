@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Button } from "@heroui/react";
 import { navItems, siteConfig } from "@/lib/constants";
 import { ThemeToggle } from "./ThemeToggle";
@@ -41,11 +42,18 @@ export function Navbar({ className = "" }: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState("hero");
   const isMobile = useIsMobile();
+  const pathname = usePathname();
+
+  // Check if we're on the home page
+  const isHomePage = pathname === "/" || pathname === "";
 
   // Handle scroll effect
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
+
+      // Only track active section on home page
+      if (!isHomePage) return;
 
       // Determine active section
       const sections = ["hero", "skills", "projects", "experience", "blog", "contact"];
@@ -63,7 +71,7 @@ export function Navbar({ className = "" }: NavbarProps) {
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [isHomePage]);
 
   // Close mobile menu on escape
   useEffect(() => {
@@ -89,22 +97,39 @@ export function Navbar({ className = "" }: NavbarProps) {
   const handleNavClick = (href: string) => {
     setIsOpen(false);
 
-    // Handle hash links for scrolling
+    // Handle hash links for scrolling on home page
     if (href.startsWith("#")) {
-      const element = document.getElementById(href.slice(1));
-      if (element) {
-        element.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (isHomePage) {
+        // We're on home page, just scroll
+        const element = document.getElementById(href.slice(1));
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
       }
+      // If not on home page, the Link will navigate to home page with hash
     } else if (href === "/") {
-      // Home link - scroll to top
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      // Home link - scroll to top if on home, otherwise navigate
+      if (isHomePage) {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
     }
   };
 
   const isActive = (href: string) => {
+    // Only show active state on home page
+    if (!isHomePage) return false;
+
     if (href === "/" || href === "#hero") return activeSection === "hero";
     if (href.startsWith("#")) return activeSection === href.slice(1);
     return false;
+  };
+
+  // Convert hash links to full path when not on home page
+  const getNavHref = (href: string) => {
+    if (href.startsWith("#") && !isHomePage) {
+      return `/${href}`;
+    }
+    return href;
   };
 
   return (
@@ -150,13 +175,14 @@ export function Navbar({ className = "" }: NavbarProps) {
               {navItems.map((item) => {
                 const Icon = navIcons[item.name];
                 const active = isActive(item.href);
+                const navHref = getNavHref(item.href);
 
                 return (
                   <Link
                     key={item.name}
-                    href={item.href}
+                    href={navHref}
                     onClick={(e) => {
-                      if (item.href.startsWith("#")) {
+                      if (item.href.startsWith("#") && isHomePage) {
                         e.preventDefault();
                         handleNavClick(item.href);
                       }
@@ -250,6 +276,7 @@ export function Navbar({ className = "" }: NavbarProps) {
                 {navItems.map((item, index) => {
                   const Icon = navIcons[item.name];
                   const active = isActive(item.href);
+                  const navHref = getNavHref(item.href);
 
                   return (
                     <motion.div
@@ -259,9 +286,9 @@ export function Navbar({ className = "" }: NavbarProps) {
                       transition={{ delay: index * 0.05 }}
                     >
                       <Link
-                        href={item.href}
+                        href={navHref}
                         onClick={(e) => {
-                          if (item.href.startsWith("#")) {
+                          if (item.href.startsWith("#") && isHomePage) {
                             e.preventDefault();
                           }
                           handleNavClick(item.href);

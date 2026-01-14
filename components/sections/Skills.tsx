@@ -1,8 +1,8 @@
 "use client";
 
 import { motion, useInView } from "framer-motion";
-import { useRef } from "react";
-import { Card, Chip, Accordion, Separator } from "@heroui/react";
+import { useRef, useState } from "react";
+import { Card, Chip, Tabs, Separator } from "@heroui/react";
 import { HiCode, HiServer, HiDatabase, HiCloud, HiSparkles, HiTrendingUp } from "react-icons/hi";
 import {
   FaDocker,
@@ -36,13 +36,14 @@ interface SkillsProps {
   skills?: Skill[];
 }
 
-// Animated skill bar with HeroUI styling
-function SkillBar({ skill, delay = 0 }: {
+// Animated skill card with modern glassmorphism design
+function SkillCard({ skill, delay = 0 }: {
   skill: Skill;
   delay?: number;
 }) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-50px" });
+  const [isHovered, setIsHovered] = useState(false);
 
   // Get icon component from skill.icon string or use fallback
   const IconComponent = skill.icon ? getIconComponent(skill.icon) : HiCode;
@@ -50,31 +51,72 @@ function SkillBar({ skill, delay = 0 }: {
   return (
     <motion.div
       ref={ref}
-      className="group flex items-center gap-3 p-3 rounded-lg hover:bg-default/50 transition-colors"
-      initial={{ opacity: 0, x: -20 }}
-      animate={isInView ? { opacity: 1, x: 0 } : {}}
-      transition={{ delay: delay * 0.1, duration: 0.5 }}
+      className="group relative"
+      initial={{ opacity: 0, scale: 0.8, y: 20 }}
+      animate={isInView ? { opacity: 1, scale: 1, y: 0 } : {}}
+      transition={{
+        delay: delay * 0.05,
+        duration: 0.5,
+        type: "spring",
+        stiffness: 100
+      }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="shrink-0 w-10 h-10 rounded-lg bg-default flex items-center justify-center group-hover:scale-110 transition-transform">
-        {IconComponent ? (
-          <IconComponent className="w-5 h-5 text-accent" />
-        ) : (
-          <HiCode className="w-5 h-5 text-accent" />
-        )}
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex justify-between items-center mb-1.5">
-          <span className="text-sm font-medium truncate">{skill.name}</span>
-          <span className="text-xs text-muted">{skill.level}%</span>
-        </div>
-        <div className="h-1.5 bg-default rounded-full overflow-hidden">
+      <div className="relative h-full p-4 rounded-2xl bg-gradient-to-br from-default/50 to-default/30 backdrop-blur-sm border border-separator/50 overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-105 hover:border-accent/50">
+        {/* Animated gradient background on hover */}
+        <motion.div
+          className="absolute inset-0 bg-gradient-to-br from-accent/5 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+          animate={isHovered ? {
+            background: [
+              "linear-gradient(135deg, rgba(var(--color-accent-rgb), 0.05) 0%, rgba(var(--color-primary-rgb), 0.05) 100%)",
+              "linear-gradient(225deg, rgba(var(--color-accent-rgb), 0.08) 0%, rgba(var(--color-primary-rgb), 0.08) 100%)",
+              "linear-gradient(135deg, rgba(var(--color-accent-rgb), 0.05) 0%, rgba(var(--color-primary-rgb), 0.05) 100%)",
+            ]
+          } : {}}
+          transition={{ duration: 2, repeat: Infinity }}
+        />
+
+        {/* Icon */}
+        <motion.div
+          className="relative w-12 h-12 mb-3 rounded-xl bg-gradient-to-br from-accent/20 to-primary/20 flex items-center justify-center"
+          whileHover={{ rotate: 35, scale: 1.1 }}
+          transition={{ duration: 0.6, type: "spring" }}
+        >
+          {IconComponent ? (
+            <IconComponent className="w-6 h-6 text-accent" />
+          ) : (
+            <HiCode className="w-6 h-6 text-accent" />
+          )}
+        </motion.div>
+
+        {/* Skill name */}
+        <h4 className="relative text-base font-semibold mb-1 group-hover:text-accent transition-colors">
+          {skill.name}
+        </h4>
+
+        {/* Featured badge */}
+        {skill.is_featured && (
           <motion.div
-            className="h-full rounded-full bg-accent"
-            initial={{ width: 0 }}
-            animate={isInView ? { width: `${skill.level}%` } : {}}
-            transition={{ delay: delay * 0.1 + 0.3, duration: 0.8, ease: "easeOut" }}
-          />
-        </div>
+            className="relative inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent/10 text-accent text-xs font-medium"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: delay * 0.05 + 0.3 }}
+          >
+            <HiSparkles className="w-3 h-3" />
+            <span>Featured</span>
+          </motion.div>
+        )}
+
+        {/* Hover effect - shine */}
+        <motion.div
+          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+          style={{
+            background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)",
+          }}
+          animate={isHovered ? { x: [-200, 200] } : {}}
+          transition={{ duration: 1, repeat: Infinity, repeatDelay: 1 }}
+        />
       </div>
     </motion.div>
   );
@@ -121,9 +163,9 @@ export function Skills({ className = "", categories = [], skills = [] }: SkillsP
 
   // Fallback stats if no data
   const stats = [
-    { label: "Years Experience", value: "4+", icon: HiTrendingUp },
-    { label: "Projects Completed", value: "50+", icon: HiCode },
-    { label: "Happy Clients", value: "30+", icon: HiSparkles },
+    { label: "Years Experience", value: "3+", icon: HiTrendingUp },
+    { label: "Projects Completed", value: "35+", icon: HiCode },
+    { label: "Happy Clients", value: "40+", icon: HiSparkles },
     { label: "Technologies", value: totalSkills > 0 ? `${totalSkills}+` : "20+", icon: HiServer },
   ];
 
@@ -163,7 +205,7 @@ export function Skills({ className = "", categories = [], skills = [] }: SkillsP
             ))}
           </div>
 
-          {/* Skills Accordion - Main Content */}
+          {/* Skills Tabs - Main Content */}
           <motion.div
             className="lg:col-span-8"
             initial={{ opacity: 0, y: 30 }}
@@ -174,62 +216,119 @@ export function Skills({ className = "", categories = [], skills = [] }: SkillsP
             <Card variant="default" className="p-6">
               <Card.Content className="p-0">
                 {hasData ? (
-                  <Accordion variant="surface" defaultExpandedKeys={[categories[0]?.id || ""]}>
-                    {categories.map((category) => {
-                      const categorySkills = skillsByCategory[category.id] || [];
-                      const CategoryIcon = category.icon ? getIconComponent(category.icon) : DEFAULT_CATEGORY_ICONS[category.id.toLowerCase()] || HiCode;
-                      const categoryColor = category.color || DEFAULT_CATEGORY_COLORS[category.id.toLowerCase()] || "accent";
+                  <Tabs
+                    className="w-full"
+                    defaultSelectedKey={categories[0]?.id || ""}
+                  >
+                    {/* Tabs List Container with horizontal scroll */}
+                    <Tabs.ListContainer
+                      className="mb-8 overflow-x-auto pb-2 scrollbar-hide"
+                      style={{
+                        scrollbarWidth: "none",
+                        msOverflowStyle: "none",
+                      }}
+                    >
+                      <Tabs.List
+                        aria-label="Skill Categories"
+                        className="w-fit *:h-auto *:w-fit *:px-4 *:py-2.5 *:text-sm *:font-medium gap-2"
+                      >
+                        {categories.map((category) => {
+                          const CategoryIcon = category.icon ? getIconComponent(category.icon) : DEFAULT_CATEGORY_ICONS[category.id.toLowerCase()] || HiCode;
+                          const categoryColor = category.color || DEFAULT_CATEGORY_COLORS[category.id.toLowerCase()] || "accent";
 
-                      return (
-                        <Accordion.Item key={category.id} id={category.id}>
-                          <Accordion.Heading>
-                            <Accordion.Trigger className="py-4 w-full">
-                              <div className="flex items-center gap-3">
-                                <div className={`w-10 h-10 rounded-lg bg-${categoryColor}/10 flex items-center justify-center`}>
+                          return (
+                            <Tabs.Tab key={category.id} id={category.id}>
+                              <div className="flex items-center gap-2">
+                                <div className={`w-8 h-8 rounded-lg bg-gradient-to-br from-${categoryColor}/20 to-${categoryColor}/10 flex items-center justify-center transition-transform group-hover:scale-110`}>
                                   {CategoryIcon ? (
-                                    <CategoryIcon className={`w-5 h-5 text-${categoryColor}`} />
+                                    <CategoryIcon className={`w-4 h-4 text-${categoryColor}`} />
                                   ) : (
-                                    <HiCode className={`w-5 h-5 text-${categoryColor}`} />
+                                    <HiCode className={`w-4 h-4 text-${categoryColor}`} />
                                   )}
                                 </div>
-                                <div className="text-left">
-                                  <div className="font-semibold">{category.name}</div>
-                                  <div className="text-sm text-muted">{category.description}</div>
-                                </div>
+                                <span>{category.name}</span>
                               </div>
-                              <Accordion.Indicator />
-                            </Accordion.Trigger>
-                          </Accordion.Heading>
-                          <Accordion.Panel>
-                            <Accordion.Body>
-                              <div className="space-y-1 pb-4">
-                                {categorySkills.length > 0 ? (
-                                  categorySkills.map((skill, skillIndex) => (
-                                    <SkillBar
-                                      key={skill.id}
-                                      skill={skill}
-                                      delay={skillIndex}
-                                    />
-                                  ))
-                                ) : (
-                                  <p className="text-sm text-muted py-4 text-center">No skills added yet</p>
-                                )}
+                              <Tabs.Indicator className="bg-gradient-to-r from-accent to-primary h-1 rounded-full" />
+                            </Tabs.Tab>
+                          );
+                        })}
+                      </Tabs.List>
+                    </Tabs.ListContainer>
+
+                    {/* Tab Panels with masonry grid layout */}
+                    {categories.map((category) => {
+                      const categorySkills = skillsByCategory[category.id] || [];
+
+                      return (
+                        <Tabs.Panel
+                          key={category.id}
+                          id={category.id}
+                          className="animate-in fade-in duration-500"
+                        >
+                          {category.description && (
+                            <motion.p
+                              className="text-sm text-muted mb-6 px-1"
+                              initial={{ opacity: 0, y: -10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ duration: 0.4 }}
+                            >
+                              {category.description}
+                            </motion.p>
+                          )}
+
+                          {/* Responsive masonry-style grid */}
+                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                            {categorySkills.length > 0 ? (
+                              categorySkills.map((skill, skillIndex) => (
+                                <SkillCard
+                                  key={skill.id}
+                                  skill={skill}
+                                  delay={skillIndex}
+                                />
+                              ))
+                            ) : (
+                              <div className="col-span-full text-center py-12">
+                                <motion.div
+                                  initial={{ opacity: 0, scale: 0.8 }}
+                                  animate={{ opacity: 1, scale: 1 }}
+                                  transition={{ duration: 0.5 }}
+                                >
+                                  <HiCode className="w-16 h-16 mx-auto text-muted/50 mb-4" />
+                                  <p className="text-sm text-muted">No skills added yet</p>
+                                </motion.div>
                               </div>
-                            </Accordion.Body>
-                          </Accordion.Panel>
-                        </Accordion.Item>
+                            )}
+                          </div>
+                        </Tabs.Panel>
                       );
                     })}
-                  </Accordion>
+                  </Tabs>
                 ) : (
                   <div className="text-center py-12">
-                    <HiCode className="w-12 h-12 mx-auto text-muted mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">No Skills Added Yet</h3>
-                    <p className="text-sm text-muted">Add skills through the admin dashboard to display them here.</p>
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <HiCode className="w-12 h-12 mx-auto text-muted mb-4" />
+                      <h3 className="text-lg font-semibold mb-2">No Skills Added Yet</h3>
+                      <p className="text-sm text-muted">Add skills through the admin dashboard to display them here.</p>
+                    </motion.div>
                   </div>
                 )}
               </Card.Content>
             </Card>
+
+            {/* Add CSS to hide scrollbars */}
+            <style jsx global>{`
+              .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+              }
+              .scrollbar-hide {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+              }
+            `}</style>
           </motion.div>
 
           {/* Right Sidebar Cards */}

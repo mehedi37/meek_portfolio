@@ -14,7 +14,15 @@ interface ProjectsProps {
 }
 
 // Project card with HeroUI Card component
-function ProjectCard({ project, index, featured = false }: { project: Project; index: number; featured?: boolean }) {
+function ProjectCard({
+  project,
+  index,
+  featured = false,
+}: {
+  project: Project;
+  index: number;
+  featured?: boolean;
+}) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
   const [isHovered, setIsHovered] = useState(false);
@@ -22,7 +30,7 @@ function ProjectCard({ project, index, featured = false }: { project: Project; i
   return (
     <motion.article
       ref={ref}
-      className={`group relative ${featured ? 'lg:col-span-2' : ''}`}
+      className={`group relative ${featured ? "lg:col-span-2" : ""}`}
       initial={{ opacity: 0, y: 50 }}
       animate={isInView ? { opacity: 1, y: 0 } : {}}
       transition={{ delay: index * 0.15, duration: 0.6, ease: "easeOut" }}
@@ -30,9 +38,16 @@ function ProjectCard({ project, index, featured = false }: { project: Project; i
       onMouseLeave={() => setIsHovered(false)}
     >
       <Link href={`/projects/${project.slug}`}>
-        <Card variant="default" className="overflow-hidden h-full hover:scale-[1.02] transition-transform duration-300">
+        <Card
+          variant="default"
+          className="overflow-hidden h-full hover:scale-[1.02] transition-transform duration-300"
+        >
           {/* Image Container */}
-          <div className={`relative ${featured ? 'h-72 lg:h-80' : 'h-56'} overflow-hidden`}>
+          <div
+            className={`relative ${
+              featured ? "h-72 lg:h-80" : "h-56"
+            } overflow-hidden`}
+          >
             {/* Background gradient overlay */}
             <div className="absolute inset-0 bg-linear-to-t from-surface via-transparent to-transparent z-10 opacity-80" />
 
@@ -43,7 +58,10 @@ function ProjectCard({ project, index, featured = false }: { project: Project; i
               transition={{ duration: 0.4, ease: "easeOut" }}
             >
               <img
-                src={project.image || "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&h=600&fit=crop"}
+                src={
+                  project.image ||
+                  "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&h=600&fit=crop"
+                }
                 alt={project.title}
                 className="w-full h-full object-cover"
               />
@@ -52,7 +70,12 @@ function ProjectCard({ project, index, featured = false }: { project: Project; i
             {/* Featured badge */}
             {project.featured && (
               <div className="absolute top-4 left-4 z-20">
-                <Chip color="accent" variant="primary" size="sm" className="gap-1">
+                <Chip
+                  color="accent"
+                  variant="primary"
+                  size="sm"
+                  className="gap-1"
+                >
                   <HiSparkles className="w-3 h-3" />
                   Featured
                 </Chip>
@@ -147,14 +170,16 @@ function ProjectCard({ project, index, featured = false }: { project: Project; i
 export function Projects({ className = "", projects = [] }: ProjectsProps) {
   const [filter, setFilter] = useState<"all" | "featured">("all");
 
-  const filteredProjects = filter === "featured"
-    ? projects.filter(p => p.featured)
-    : projects;
+  const filteredProjects =
+    filter === "featured" ? projects.filter((p) => p.featured) : projects;
 
   const hasProjects = projects.length > 0;
 
   return (
-    <section id="projects" className={`relative py-24 lg:py-32 overflow-hidden ${className}`}>
+    <section
+      id="projects"
+      className={`relative py-24 lg:py-32 overflow-hidden ${className}`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <motion.div
@@ -172,7 +197,8 @@ export function Projects({ className = "", projects = [] }: ProjectsProps) {
             Projects I&apos;ve Built
           </h2>
           <p className="text-lg text-muted max-w-2xl mx-auto text-balance">
-            A selection of projects that showcase my skills and passion for building great products.
+            A selection of projects that showcase my skills and passion for
+            building great products.
           </p>
         </motion.div>
 
@@ -223,10 +249,12 @@ export function Projects({ className = "", projects = [] }: ProjectsProps) {
               viewport={{ once: true }}
               transition={{ delay: 0.4, duration: 0.5 }}
             >
-              <Button variant="secondary" size="lg" className="group">
-                View All Projects
-                <FaArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
-              </Button>
+              <Link href="/projects">
+                <Button variant="secondary" size="lg" className="group">
+                  View All Projects
+                  <FaArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </Link>
             </motion.div>
           </>
         ) : (
@@ -242,7 +270,8 @@ export function Projects({ className = "", projects = [] }: ProjectsProps) {
                 <HiPhotograph className="w-16 h-16 mx-auto text-muted" />
                 <h3 className="text-xl font-semibold">No Projects Yet</h3>
                 <p className="text-muted">
-                  Projects will appear here once added through the admin dashboard.
+                  Projects will appear here once added through the admin
+                  dashboard.
                 </p>
               </Card.Content>
             </Card>

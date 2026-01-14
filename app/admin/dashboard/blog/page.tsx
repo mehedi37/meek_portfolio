@@ -18,6 +18,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { FaPlus, FaEdit, FaTrash, FaBlog, FaEye, FaCalendar, FaClock } from "react-icons/fa";
 import { createClient } from "@/lib/supabase/client";
+import { MDXEditor } from "@/components/admin/MDXEditor";
 import type { BlogPost } from "@/lib/supabase/types";
 import Link from "next/link";
 import Image from "next/image";
@@ -367,12 +368,13 @@ export default function BlogManagementPage() {
       )}
 
       {/* Add/Edit Modal */}
-      <Modal.Backdrop isOpen={isModalOpen} onOpenChange={setIsModalOpen}>
-        <Modal.Container size="lg" scroll="inside">
+      <Modal>
+      <Modal.Backdrop variant="opaque" isOpen={isModalOpen} onOpenChange={setIsModalOpen}>
+        <Modal.Container size="lg" scroll="outside">
           <Modal.Dialog>
             <Modal.CloseTrigger />
             <Modal.Header>
-              <Modal.Heading>
+              <Modal.Heading className="mb-2 text-center">
                 {editingPost?.id ? "Edit Post" : "New Post"}
               </Modal.Heading>
             </Modal.Header>
@@ -429,23 +431,18 @@ export default function BlogManagementPage() {
                   />
                 </TextField>
 
-                <TextField
-                  name="content"
-                  isRequired
-                  value={editingPost?.content || ""}
-                  onChange={(value) =>
-                    setEditingPost((prev) => prev ? ({ ...prev, content: value }) : prev)
-                  }
-                >
-                  <Label>Content (Markdown)</Label>
-                  <TextArea
+                <div className="space-y-2">
+                  <Label>Content (Markdown/MDX)</Label>
+                  <MDXEditor
+                    value={editingPost?.content || ""}
+                    onChange={(value) =>
+                      setEditingPost((prev) => prev ? ({ ...prev, content: value }) : prev)
+                    }
                     placeholder="Write your post content in Markdown..."
-                    rows={12}
-                    className="font-mono text-sm"
+                    minHeight={350}
                   />
-                  <Description>Supports Markdown formatting</Description>
-                  <FieldError />
-                </TextField>
+                  <Description>Supports Markdown and MDX formatting</Description>
+                </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <TextField
@@ -570,6 +567,7 @@ export default function BlogManagementPage() {
           </Modal.Dialog>
         </Modal.Container>
       </Modal.Backdrop>
+      </Modal>
     </div>
   );
 }

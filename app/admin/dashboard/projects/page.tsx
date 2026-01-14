@@ -352,12 +352,12 @@ export default function ProjectsManagementPage() {
       )}
 
       {/* Add/Edit Modal */}
-      <Modal.Backdrop isOpen={isModalOpen} onOpenChange={setIsModalOpen}>
-        <Modal.Container size="lg" scroll="inside">
+      <Modal.Backdrop variant="opaque" isOpen={isModalOpen} onOpenChange={setIsModalOpen}>
+        <Modal.Container size="lg" scroll="outside">
           <Modal.Dialog>
             <Modal.CloseTrigger />
             <Modal.Header>
-              <Modal.Heading>
+              <Modal.Heading className="mb-2 text-center">
                 {editingProject?.id ? "Edit Project" : "Add New Project"}
               </Modal.Heading>
             </Modal.Header>

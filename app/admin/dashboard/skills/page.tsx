@@ -9,7 +9,6 @@ import {
   TextField,
   Input,
   Label,
-  TextArea,
   Description,
   FieldError,
   Spinner,
@@ -26,8 +25,8 @@ import type { Skill, SkillCategory } from "@/lib/supabase/types";
 
 const defaultSkill: Partial<Skill> = {
   name: "",
+  category: "",
   category_id: "",
-  level: 80,
   icon: "",
   color: "",
   is_featured: false,
@@ -90,14 +89,18 @@ export default function SkillsManagementPage() {
     setError("");
 
     try {
+      // Get category name from category_id
+      const selectedCategory = categories.find(c => c.id === editingSkill.category_id);
+      const categoryName = selectedCategory?.name || "Uncategorized";
+
       if (editingSkill.id) {
         // Update
         const { error } = await supabase
           .from("skills")
           .update({
             name: editingSkill.name,
+            category: categoryName,
             category_id: editingSkill.category_id || null,
-            level: editingSkill.level,
             icon: editingSkill.icon || null,
             color: editingSkill.color || null,
             is_featured: editingSkill.is_featured,
@@ -107,12 +110,11 @@ export default function SkillsManagementPage() {
 
         if (error) throw error;
       } else {
-        console.log("Creating skill:", editingSkill.category_id);
         // Create
         const { error } = await supabase.from("skills").insert({
           name: editingSkill.name,
+          category: categoryName,
           category_id: editingSkill.category_id || null,
-          level: editingSkill.level || 80,
           icon: editingSkill.icon || null,
           color: editingSkill.color || null,
           is_featured: editingSkill.is_featured || false,
@@ -249,16 +251,15 @@ export default function SkillsManagementPage() {
                                   </span>
                                 )}
                               </div>
-                              <p className="text-sm text-muted mt-1">
-                                {skill.level}% proficiency
-                              </p>
-                              {/* Progress bar */}
-                              <div className="mt-2 h-2 bg-muted/20 rounded-full overflow-hidden">
-                                <div
-                                  className="h-full bg-accent rounded-full transition-all"
-                                  style={{ width: `${skill.level}%` }}
-                                />
-                              </div>
+                              {skill.color && (
+                                <div className="flex items-center gap-1 mt-1">
+                                  <div
+                                    className="w-3 h-3 rounded-full"
+                                    style={{ backgroundColor: `var(--color-${skill.color})` }}
+                                  />
+                                  <span className="text-xs text-muted capitalize">{skill.color}</span>
+                                </div>
+                              )}
                             </div>
                           </div>
                           <div className="flex gap-1">
@@ -294,12 +295,12 @@ export default function SkillsManagementPage() {
       )}
 
       {/* Add/Edit Modal */}
-      <Modal.Backdrop isOpen={isModalOpen} onOpenChange={setIsModalOpen}>
-        <Modal.Container>
-          <Modal.Dialog className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+      <Modal.Backdrop variant="opaque" isOpen={isModalOpen} onOpenChange={setIsModalOpen}>
+        <Modal.Container size="md" scroll="outside">
+          <Modal.Dialog>
             <Modal.CloseTrigger />
             <Modal.Header>
-              <Modal.Heading>
+              <Modal.Heading className="mb-2 text-center">
                 {editingSkill?.id ? "Edit Skill" : "Add New Skill"}
               </Modal.Heading>
             </Modal.Header>
@@ -352,24 +353,6 @@ export default function SkillsManagementPage() {
                     </Select.Popover>
                   </Select>
                 </div>
-
-                <TextField
-                  name="level"
-                  type="number"
-                  isRequired
-                  value={String(editingSkill?.level || 80)}
-                  onChange={(value) =>
-                    setEditingSkill((prev) => ({
-                      ...prev,
-                      level: Math.min(100, Math.max(0, parseInt(value) || 0)),
-                    }))
-                  }
-                >
-                  <Label>Proficiency Level (%)</Label>
-                  <Input placeholder="0-100" />
-                  <Description>Enter a value between 0 and 100</Description>
-                  <FieldError />
-                </TextField>
 
                 <div>
                   <Label className="mb-2 block">Icon</Label>

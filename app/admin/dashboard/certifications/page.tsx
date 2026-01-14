@@ -261,12 +261,12 @@ export default function CertificationsManagementPage() {
       )}
 
       {/* Add/Edit Modal */}
-      <Modal.Backdrop isOpen={isModalOpen} onOpenChange={setIsModalOpen}>
-        <Modal.Container>
-          <Modal.Dialog className="sm:max-w-md">
+      <Modal.Backdrop variant="opaque" isOpen={isModalOpen} onOpenChange={setIsModalOpen}>
+        <Modal.Container size="md" scroll="outside">
+          <Modal.Dialog>
             <Modal.CloseTrigger />
             <Modal.Header>
-              <Modal.Heading>
+              <Modal.Heading className="mb-2 text-center">
                 {editingCert?.id ? "Edit Certification" : "Add New Certification"}
               </Modal.Heading>
             </Modal.Header>

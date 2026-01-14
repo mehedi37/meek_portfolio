@@ -350,12 +350,12 @@ export default function ExperienceManagementPage() {
       )}
 
       {/* Add/Edit Modal */}
-      <Modal.Backdrop isOpen={isModalOpen} onOpenChange={setIsModalOpen}>
-        <Modal.Container size="md" scroll="inside">
+      <Modal.Backdrop variant="opaque" isOpen={isModalOpen} onOpenChange={setIsModalOpen}>
+        <Modal.Container size="md" scroll="outside">
           <Modal.Dialog>
             <Modal.CloseTrigger />
             <Modal.Header>
-              <Modal.Heading>
+              <Modal.Heading className="mb-2 text-center">
                 {editingExperience?.id ? "Edit Experience" : "Add New Experience"}
               </Modal.Heading>
             </Modal.Header>

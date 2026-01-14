@@ -145,7 +145,6 @@ export type Database = {
           category: string;
           category_id: string | null;
           icon: string | null;
-          level: number | null;
           color: string | null;
           is_featured: boolean | null;
           sort_order: number | null;
@@ -157,7 +156,6 @@ export type Database = {
           category: string;
           category_id?: string | null;
           icon?: string | null;
-          level?: number | null;
           color?: string | null;
           is_featured?: boolean | null;
           sort_order?: number | null;
@@ -169,7 +167,6 @@ export type Database = {
           category?: string;
           category_id?: string | null;
           icon?: string | null;
-          level?: number | null;
           color?: string | null;
           is_featured?: boolean | null;
           sort_order?: number | null;
