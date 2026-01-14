@@ -2,13 +2,17 @@
 
 import { motion, useScroll, useTransform, useSpring, useMotionValue } from "framer-motion";
 import { useRef, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { Button, Avatar, Chip, Card } from "@heroui/react";
-import { FaGithub, FaLinkedin, FaArrowRight, FaDownload } from "react-icons/fa";
+import { FaGithub, FaLinkedin, FaTwitter, FaArrowRight, FaDownload } from "react-icons/fa";
 import { HiSparkles, HiLocationMarker, HiLightningBolt, HiCode, HiGlobe } from "react-icons/hi";
-import { siteConfig, socialLinks } from "@/lib/constants";
+import type { SiteProfile, SocialLink } from "@/lib/supabase/types";
+import { IconRenderer } from "@/components/admin/IconSearch";
 
 interface HeroProps {
   className?: string;
+  profile?: SiteProfile | null;
+  socialLinks?: SocialLink[];
 }
 
 // Animated background gradient blob
@@ -53,19 +57,27 @@ function GradientBlob({
 }
 
 // Status badge with pulse animation
-function StatusBadge() {
+function StatusBadge({ status, statusColor = "success" }: { status?: string | null; statusColor?: string | null }) {
+  const displayStatus = status || "Open to opportunities";
+  const colorClass = statusColor === "success" ? "bg-success" :
+                     statusColor === "warning" ? "bg-warning" :
+                     statusColor === "danger" ? "bg-danger" : "bg-accent";
+  const chipColor = statusColor === "success" ? "success" :
+                    statusColor === "warning" ? "warning" :
+                    statusColor === "danger" ? "danger" : "default";
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2, duration: 0.5 }}
     >
-      <Chip color="success" variant="soft" className="gap-2">
+      <Chip color={chipColor as "success" | "warning" | "danger" | "default"} variant="soft" className="gap-2">
         <span className="relative flex h-2 w-2">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75" />
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-success" />
+          <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${colorClass} opacity-75`} />
+          <span className={`relative inline-flex rounded-full h-2 w-2 ${colorClass}`} />
         </span>
-        Open to opportunities
+        {displayStatus}
       </Chip>
     </motion.div>
   );
@@ -104,8 +116,22 @@ function QuickStat({
  * Hero Section - Modern Bento-style layout
  * Uses HeroUI v3 semantic classes with Framer Motion animations
  */
-export function Hero({ className = "" }: HeroProps) {
+export function Hero({ className = "", profile, socialLinks = [] }: HeroProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Fallback values if no profile data - use correct database field names
+  // console.log("Profile data in Hero:", profile);
+  const name = profile?.full_name || "Your Name";
+  const shortName = profile?.short_name || "YN";
+  const tagline = profile?.tagline || "Full Stack Developer";
+  const aboutMe = profile?.about_me || "I craft beautiful, performant digital experiences that blend creativity with clean code.";
+  const profileImage = profile?.profile_image || "https://img.heroui.chat/image/avatar?w=400&h=400&u=1";
+  const location = profile?.location || "Remote Worldwide";
+  const yearsExperience = profile?.years_experience ?? 5;
+  const completedProjects = profile?.completed_projects ?? 50;
+  const status = profile?.status;
+  const statusColor = profile?.status_color;
+  const resumeUrl = profile?.resume_url;
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -143,7 +169,7 @@ export function Hero({ className = "" }: HeroProps) {
     <section
       ref={containerRef}
       id="hero"
-      className={`relative min-h-screen flex items-center overflow-hidden bg-background ${className}`}
+      className={`relative min-h-screen flex items-center overflow-hidden ${className}`}
     >
       {/* Animated Background */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
@@ -179,7 +205,7 @@ export function Hero({ className = "" }: HeroProps) {
             <Card variant="default" className="p-8 lg:p-10 h-full">
               <Card.Content className="space-y-8 p-0">
                 {/* Status Badge */}
-                <StatusBadge />
+                <StatusBadge status={status} statusColor={statusColor} />
 
                 {/* Profile Section */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
@@ -190,11 +216,11 @@ export function Hero({ className = "" }: HeroProps) {
                   >
                     <Avatar className="size-24 lg:size-28 ring-4 ring-surface ring-offset-2 ring-offset-background">
                       <Avatar.Image
-                        alt={siteConfig.name}
-                        src="https://img.heroui.chat/image/avatar?w=400&h=400&u=1"
+                        alt={name}
+                        src={profileImage}
                       />
                       <Avatar.Fallback className="text-2xl font-bold bg-accent text-white">
-                        {siteConfig.name.split(' ').map(n => n[0]).join('')}
+                        {shortName}
                       </Avatar.Fallback>
                     </Avatar>
                     {/* Online indicator */}
@@ -203,31 +229,31 @@ export function Hero({ className = "" }: HeroProps) {
 
                   <div className="space-y-2">
                     <h1 className="text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight">
-                      {siteConfig.name}
+                      {name}
                     </h1>
                     <p className="text-xl lg:text-2xl text-muted font-medium">
-                      Full Stack Developer
+                      {tagline}
                     </p>
                   </div>
                 </div>
 
                 {/* Bio */}
                 <p className="text-lg text-muted leading-relaxed max-w-2xl">
-                  I craft beautiful, performant digital experiences that blend creativity
-                  with clean code. Specializing in modern web technologies and turning
-                  complex problems into elegant solutions.
+                  {aboutMe}
                 </p>
 
                 {/* Info Pills */}
                 <div className="flex flex-wrap gap-3">
                   <Chip variant="secondary" className="gap-2">
                     <HiLocationMarker className="w-4 h-4" />
-                    Remote Worldwide
+                    {location}
                   </Chip>
-                  <Chip variant="secondary" className="gap-2">
-                    <HiLightningBolt className="w-4 h-4" />
-                    Available Now
-                  </Chip>
+                  {statusColor === "success" && (
+                    <Chip variant="secondary" className="gap-2">
+                      <HiLightningBolt className="w-4 h-4" />
+                      Available Now
+                    </Chip>
+                  )}
                 </div>
 
                 {/* CTA Buttons */}
@@ -250,14 +276,17 @@ export function Hero({ className = "" }: HeroProps) {
                     Get In Touch
                   </Button>
 
-                  <Button
-                    variant="ghost"
-                    size="lg"
-                    isIconOnly
-                    aria-label="Download Resume"
-                  >
-                    <FaDownload />
-                  </Button>
+                  {resumeUrl && (
+                    <Link
+                      href={resumeUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="Download Resume"
+                      className="inline-flex items-center justify-center rounded-full bg-surface hover:bg-default w-12 h-12 transition-colors"
+                    >
+                      <FaDownload className="w-5 h-5" />
+                    </Link>
+                  )}
                 </div>
               </Card.Content>
             </Card>
@@ -280,23 +309,47 @@ export function Hero({ className = "" }: HeroProps) {
                 </Card.Header>
                 <Card.Content className="p-0">
                   <div className="flex gap-3">
-                    {socialLinks.map((social) => (
-                      <Button
-                        key={social.name}
-                        variant="ghost"
-                        size="lg"
-                        isIconOnly
-                        as="a"
-                        href={social.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label={social.name}
-                        className="hover:bg-accent/10 hover:text-accent transition-colors"
-                      >
-                        {social.name === "GitHub" && <FaGithub className="w-5 h-5" />}
-                        {social.name === "LinkedIn" && <FaLinkedin className="w-5 h-5" />}
-                      </Button>
-                    ))}
+                    {socialLinks.length > 0 ? (
+                      socialLinks.map((social) => (
+                        <Link
+                          key={social.id}
+                          href={social.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={social.platform}
+                          className="inline-flex items-center justify-center rounded-full bg-surface hover:bg-accent/10 hover:text-accent w-12 h-12 transition-colors"
+                        >
+                          {social.icon ? (
+                            <IconRenderer name={social.icon} className="w-5 h-5" />
+                          ) : social.platform === "GitHub" ? (
+                            <FaGithub className="w-5 h-5" />
+                          ) : social.platform === "LinkedIn" ? (
+                            <FaLinkedin className="w-5 h-5" />
+                          ) : social.platform === "Twitter" ? (
+                            <FaTwitter className="w-5 h-5" />
+                          ) : (
+                            <FaGithub className="w-5 h-5" />
+                          )}
+                        </Link>
+                      ))
+                    ) : (
+                      <>
+                        <Link
+                          href="#"
+                          aria-label="GitHub"
+                          className="inline-flex items-center justify-center rounded-full bg-surface hover:bg-accent/10 hover:text-accent w-12 h-12 transition-colors"
+                        >
+                          <FaGithub className="w-5 h-5" />
+                        </Link>
+                        <Link
+                          href="#"
+                          aria-label="LinkedIn"
+                          className="inline-flex items-center justify-center rounded-full bg-surface hover:bg-accent/10 hover:text-accent w-12 h-12 transition-colors"
+                        >
+                          <FaLinkedin className="w-5 h-5" />
+                        </Link>
+                      </>
+                    )}
                   </div>
                 </Card.Content>
               </Card>
@@ -306,13 +359,13 @@ export function Hero({ className = "" }: HeroProps) {
             <div className="grid grid-cols-2 gap-4">
               <QuickStat
                 icon={HiCode}
-                value="5+"
+                value={`${yearsExperience}+`}
                 label="Years Exp"
                 delay={0.3}
               />
               <QuickStat
                 icon={HiGlobe}
-                value="50+"
+                value={`${completedProjects}+`}
                 label="Projects"
                 delay={0.4}
               />

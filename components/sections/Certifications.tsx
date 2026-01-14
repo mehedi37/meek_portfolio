@@ -7,44 +7,7 @@ import type { Certification } from "@/lib/supabase/types";
 import { FaExternalLinkAlt, FaAward, FaCertificate, FaCalendar } from "react-icons/fa";
 
 // Demo certifications using Supabase Certification type with snake_case field names
-const DEMO_CERTIFICATIONS: Certification[] = [
-  {
-    id: "1",
-    title: "AWS Solutions Architect",
-    issuer: "Amazon Web Services",
-    date: "2024-01-15",
-    credential_url: "https://aws.amazon.com/verification",
-    image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400",
-    created_at: "2024-01-15T00:00:00.000Z",
-  },
-  {
-    id: "2",
-    title: "Professional Cloud Developer",
-    issuer: "Google Cloud",
-    date: "2023-09-10",
-    credential_url: "https://cloud.google.com/certification",
-    image: "https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?w=400",
-    created_at: "2023-09-10T00:00:00.000Z",
-  },
-  {
-    id: "3",
-    title: "Meta Frontend Developer",
-    issuer: "Meta",
-    date: "2023-06-20",
-    credential_url: "https://coursera.org/verify",
-    image: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400",
-    created_at: "2023-06-20T00:00:00.000Z",
-  },
-  {
-    id: "4",
-    title: "MongoDB Developer",
-    issuer: "MongoDB University",
-    date: "2023-03-05",
-    credential_url: "https://university.mongodb.com",
-    image: "https://images.unsplash.com/photo-1544383835-bda2bc66a55d?w=400",
-    created_at: "2023-03-05T00:00:00.000Z",
-  },
-];
+const DEMO_CERTIFICATIONS: Certification[] = [];
 
 interface CertificationsProps {
   className?: string;
@@ -115,7 +78,7 @@ function CertificationCard({ certification, index }: CertificationCardProps) {
             {certification.credential_url && (
               <Link
                 href={certification.credential_url}
-                isExternal
+                target="_blank"
                 className="text-accent text-xs font-medium flex items-center gap-1.5 group/link"
               >
                 Verify
@@ -147,7 +110,7 @@ export function Certifications({
     <section
       ref={sectionRef}
       id="certifications"
-      className={`relative py-24 lg:py-32 overflow-hidden bg-background ${className}`}
+      className={`relative py-24 lg:py-32 overflow-hidden ${className}`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}

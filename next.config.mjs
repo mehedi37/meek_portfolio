@@ -3,6 +3,9 @@ const nextConfig = {
   // Optimize HeroUI imports
   transpilePackages: ["@heroui/react", "@heroui/styles"],
 
+  // Fix workspace root warning
+  outputFileTracingRoot: import.meta.dirname,
+
   // Optimize bundle size
   experimental: {
     reactCompiler: true, // React 19 compiler

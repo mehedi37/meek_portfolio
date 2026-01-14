@@ -3,48 +3,8 @@
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import { Chip, Card, Separator } from "@heroui/react";
-import { HiBriefcase, HiLocationMarker, HiCalendar, HiSparkles } from "react-icons/hi";
+import { HiBriefcase, HiLocationMarker, HiCalendar, HiSparkles, HiDocumentText } from "react-icons/hi";
 import type { Experience as ExperienceType } from "@/lib/supabase/types";
-
-// Demo experience
-const DEMO_EXPERIENCES: ExperienceType[] = [
-  {
-    id: "1",
-    company: "Tech Innovations Inc.",
-    position: "Senior Full Stack Developer",
-    description: "Led development of enterprise applications serving 100K+ users. Architected microservices infrastructure and mentored junior developers. Reduced page load time by 40% through performance optimization.",
-    start_date: "2022-06-01",
-    end_date: null,
-    location: "San Francisco, CA",
-    technologies: ["React", "Node.js", "AWS", "PostgreSQL", "Docker"],
-    type: "full-time",
-    created_at: "2022-06-01T00:00:00.000Z",
-  },
-  {
-    id: "2",
-    company: "Digital Solutions Co.",
-    position: "Full Stack Developer",
-    description: "Developed and maintained multiple client projects including e-commerce platforms and CRM systems. Built real-time collaborative tools using WebSocket. Integrated payment gateways processing $2M+ monthly.",
-    start_date: "2020-01-15",
-    end_date: "2022-05-31",
-    location: "Austin, TX",
-    technologies: ["Vue.js", "Python", "MongoDB", "Redis", "Kubernetes"],
-    type: "full-time",
-    created_at: "2020-01-15T00:00:00.000Z",
-  },
-  {
-    id: "3",
-    company: "StartUp Labs",
-    position: "Junior Developer",
-    description: "Started career building web applications and learning modern development practices. Contributed to multiple MVP launches for early-stage startups.",
-    start_date: "2018-07-01",
-    end_date: "2019-12-31",
-    location: "Remote",
-    technologies: ["JavaScript", "React", "Node.js", "MySQL"],
-    type: "full-time",
-    created_at: "2018-07-01T00:00:00.000Z",
-  },
-];
 
 interface ExperienceProps {
   className?: string;
@@ -180,9 +140,11 @@ function TimelineCard({
 /**
  * Experience Section - Timeline with HeroUI Cards
  */
-export function Experience({ className = "", experiences = DEMO_EXPERIENCES }: ExperienceProps) {
+export function Experience({ className = "", experiences = [] }: ExperienceProps) {
+  const hasExperiences = experiences.length > 0;
+
   return (
-    <section id="experience" className={`relative py-24 lg:py-32 overflow-hidden bg-background ${className}`}>
+    <section id="experience" className={`relative py-24 lg:py-32 overflow-hidden ${className}`}>
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <motion.div
@@ -204,17 +166,37 @@ export function Experience({ className = "", experiences = DEMO_EXPERIENCES }: E
           </p>
         </motion.div>
 
-        {/* Timeline */}
-        <div className="relative">
-          {experiences.map((exp, index) => (
-            <TimelineCard
-              key={exp.id}
-              experience={exp}
-              index={index}
-              isLast={index === experiences.length - 1}
-            />
-          ))}
-        </div>
+        {hasExperiences ? (
+          /* Timeline */
+          <div className="relative">
+            {experiences.map((exp, index) => (
+              <TimelineCard
+                key={exp.id}
+                experience={exp}
+                index={index}
+                isLast={index === experiences.length - 1}
+              />
+            ))}
+          </div>
+        ) : (
+          /* Empty State */
+          <motion.div
+            className="text-center py-16"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <Card variant="secondary" className="max-w-md mx-auto p-12">
+              <Card.Content className="space-y-4 p-0">
+                <HiDocumentText className="w-16 h-16 mx-auto text-muted" />
+                <h3 className="text-xl font-semibold">No Experience Added Yet</h3>
+                <p className="text-muted">
+                  Experience entries will appear here once added through the admin dashboard.
+                </p>
+              </Card.Content>
+            </Card>
+          </motion.div>
+        )}
       </div>
     </section>
   );

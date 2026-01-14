@@ -16,7 +16,6 @@ import {
   Description,
   Separator
 } from "@heroui/react";
-import { siteConfig, socialLinks } from "@/lib/constants";
 import {
   HiMail,
   HiLocationMarker,
@@ -28,44 +27,48 @@ import {
 } from "react-icons/hi";
 import { FaGithub, FaLinkedin, FaTwitter } from "react-icons/fa";
 import type { ContactFormData } from "@/types";
+import type { SiteProfile, SocialLink } from "@/lib/supabase/types";
+import { IconRenderer } from "@/components/admin/IconSearch";
 
 interface ContactProps {
   className?: string;
+  profile?: SiteProfile | null;
+  socialLinks?: SocialLink[];
 }
-
-const CONTACT_INFO = [
-  {
-    icon: HiMail,
-    label: "Email",
-    value: siteConfig.links.email,
-    href: `mailto:${siteConfig.links.email}`,
-  },
-  {
-    icon: HiLocationMarker,
-    label: "Location",
-    value: "Remote Worldwide",
-    href: null,
-  },
-  {
-    icon: HiPhone,
-    label: "Response Time",
-    value: "Within 24 hours",
-    href: null,
-  },
-];
-
-const SOCIAL_LINKS = [
-  { name: "GitHub", icon: FaGithub, url: siteConfig.links.github },
-  { name: "LinkedIn", icon: FaLinkedin, url: siteConfig.links.linkedin },
-  { name: "Twitter", icon: FaTwitter, url: siteConfig.links.twitter },
-];
 
 /**
  * Contact Section - Modern form with HeroUI components
  */
-export function Contact({ className = "" }: ContactProps) {
+export function Contact({ className = "", profile, socialLinks = [] }: ContactProps) {
   const sectionRef = useRef(null);
   const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
+
+  // Extract profile data with fallbacks
+  const email = profile?.email || "your.email@example.com";
+  const location = profile?.location || "Remote Worldwide";
+  const isAvailable = profile?.status_color === "success" ? true : false;
+
+  // Build contact info dynamically
+  const contactInfo = [
+    {
+      icon: HiMail,
+      label: "Email",
+      value: email,
+      href: `mailto:${email}`,
+    },
+    {
+      icon: HiLocationMarker,
+      label: "Location",
+      value: location,
+      href: null,
+    },
+    {
+      icon: HiPhone,
+      label: "Response Time",
+      value: "Within 24 hours",
+      href: null,
+    },
+  ];
 
   const [formData, setFormData] = useState<ContactFormData>({
     name: "",
@@ -103,7 +106,7 @@ export function Contact({ className = "" }: ContactProps) {
     <section
       ref={sectionRef}
       id="contact"
-      className={`relative py-24 lg:py-32 overflow-hidden bg-background ${className}`}
+      className={`relative py-24 lg:py-32 overflow-hidden ${className}`}
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
@@ -136,7 +139,7 @@ export function Contact({ className = "" }: ContactProps) {
             {/* Info Cards */}
             <Card variant="secondary" className="p-6">
               <Card.Content className="space-y-4 p-0">
-                {CONTACT_INFO.map((info, index) => (
+                {contactInfo.map((info, index) => (
                   <motion.div
                     key={info.label}
                     className="flex items-center gap-4 p-3 rounded-lg hover:bg-default/50 transition-colors group"
@@ -176,22 +179,52 @@ export function Contact({ className = "" }: ContactProps) {
               </Card.Header>
               <Card.Content className="p-0">
                 <div className="flex gap-3">
-                  {SOCIAL_LINKS.map((social) => (
-                    <Button
-                      key={social.name}
-                      variant="ghost"
-                      size="lg"
-                      isIconOnly
-                      as="a"
-                      href={social.url || "#"}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label={social.name}
-                      className="hover:bg-accent/10 hover:text-accent transition-colors"
-                    >
-                      <social.icon className="w-5 h-5" />
-                    </Button>
-                  ))}
+                  {socialLinks.length > 0 ? (
+                    socialLinks.map((social) => (
+                      <a
+                        key={social.id}
+                        href={social.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={social.platform}
+                        className="inline-flex items-center justify-center h-12 w-12 rounded-lg border border-border/50 hover:bg-accent/10 hover:text-accent hover:border-accent/50 transition-all duration-200"
+                      >
+                        {social.icon ? (
+                          <IconRenderer name={social.icon} className="w-5 h-5" />
+                        ) : social.platform.toLowerCase() === "github" ? (
+                          <FaGithub className="w-5 h-5" />
+                        ) : social.platform.toLowerCase() === "linkedin" ? (
+                          <FaLinkedin className="w-5 h-5" />
+                        ) : social.platform.toLowerCase() === "twitter" ? (
+                          <FaTwitter className="w-5 h-5" />
+                        ) : null}
+                      </a>
+                    ))
+                  ) : (
+                    <>
+                      <a
+                        href="#"
+                        aria-label="GitHub"
+                        className="inline-flex items-center justify-center h-12 w-12 rounded-lg border border-border/50 hover:bg-accent/10 hover:text-accent hover:border-accent/50 transition-all duration-200"
+                      >
+                        <FaGithub className="w-5 h-5" />
+                      </a>
+                      <a
+                        href="#"
+                        aria-label="LinkedIn"
+                        className="inline-flex items-center justify-center h-12 w-12 rounded-lg border border-border/50 hover:bg-accent/10 hover:text-accent hover:border-accent/50 transition-all duration-200"
+                      >
+                        <FaLinkedin className="w-5 h-5" />
+                      </a>
+                      <a
+                        href="#"
+                        aria-label="Twitter"
+                        className="inline-flex items-center justify-center h-12 w-12 rounded-lg border border-border/50 hover:bg-accent/10 hover:text-accent hover:border-accent/50 transition-all duration-200"
+                      >
+                        <FaTwitter className="w-5 h-5" />
+                      </a>
+                    </>
+                  )}
                 </div>
               </Card.Content>
             </Card>
@@ -206,13 +239,17 @@ export function Contact({ className = "" }: ContactProps) {
                 <Card.Content className="space-y-3 p-0">
                   <div className="flex items-center gap-3">
                     <span className="relative flex h-3 w-3">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75" />
-                      <span className="relative inline-flex rounded-full h-3 w-3 bg-success" />
+                      <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${isAvailable ? 'bg-success' : 'bg-default'} opacity-75`} />
+                      <span className={`relative inline-flex rounded-full h-3 w-3 ${isAvailable ? 'bg-success' : 'bg-default'}`} />
                     </span>
-                    <span className="text-sm font-medium">Available for work</span>
+                    <span className="text-sm font-medium">
+                      {isAvailable ? "Available for work" : "Currently unavailable"}
+                    </span>
                   </div>
                   <p className="text-sm text-muted">
-                    Currently accepting new projects and collaborations. Let&apos;s build something amazing together!
+                    {isAvailable
+                      ? "Currently accepting new projects and collaborations. Let's build something amazing together!"
+                      : "Not taking on new projects at the moment. Feel free to reach out for future opportunities."}
                   </p>
                 </Card.Content>
               </Card>

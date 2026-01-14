@@ -24,6 +24,8 @@ import type { Experience, ExperienceInsert, ExperienceUpdate } from "@/lib/supab
 
 const defaultExperience: Partial<Experience> = {
   company: "",
+  company_logo: "",
+  company_url: "",
   position: "",
   description: "",
   start_date: "",
@@ -31,6 +33,8 @@ const defaultExperience: Partial<Experience> = {
   location: "",
   technologies: [],
   type: "full-time",
+  is_current: false,
+  sort_order: 0,
 };
 
 const experienceTypes = [
@@ -77,7 +81,7 @@ export default function ExperienceManagementPage() {
   const openModal = (experience?: Experience) => {
     if (experience) {
       setEditingExperience(experience);
-      setIsCurrent(!experience.end_date);
+      setIsCurrent(experience.is_current || !experience.end_date);
     } else {
       setEditingExperience({ ...defaultExperience });
       setIsCurrent(false);
@@ -135,13 +139,17 @@ export default function ExperienceManagementPage() {
         // Update existing experience
         const updateData: ExperienceUpdate = {
           company: editingExperience.company,
+          company_logo: editingExperience.company_logo || null,
+          company_url: editingExperience.company_url || null,
           position: editingExperience.position,
           description: editingExperience.description,
           start_date: editingExperience.start_date,
           end_date: isCurrent ? null : editingExperience.end_date || null,
+          is_current: isCurrent,
           location: editingExperience.location || null,
           technologies: editingExperience.technologies || null,
           type: editingExperience.type || null,
+          sort_order: editingExperience.sort_order || 0,
         };
 
         const { error } = await supabase
@@ -154,13 +162,17 @@ export default function ExperienceManagementPage() {
         // Create new experience
         const insertData: ExperienceInsert = {
           company: editingExperience.company!,
+          company_logo: editingExperience.company_logo || null,
+          company_url: editingExperience.company_url || null,
           position: editingExperience.position!,
           description: editingExperience.description!,
           start_date: editingExperience.start_date!,
           end_date: isCurrent ? null : editingExperience.end_date || null,
+          is_current: isCurrent,
           location: editingExperience.location || null,
           technologies: editingExperience.technologies || null,
           type: editingExperience.type || null,
+          sort_order: editingExperience.sort_order || 0,
         };
 
         const { error } = await supabase.from("experiences").insert(insertData);
@@ -244,7 +256,7 @@ export default function ExperienceManagementPage() {
                   <div className="flex flex-col sm:flex-row gap-4">
                     {/* Timeline indicator */}
                     <div className="hidden sm:flex flex-col items-center">
-                      <div className={`w-4 h-4 rounded-full ${!exp.end_date ? "bg-accent" : "bg-muted"}`} />
+                      <div className={`w-4 h-4 rounded-full ${exp.is_current || !exp.end_date ? "bg-accent" : "bg-muted"}`} />
                       {index < experiences.length - 1 && (
                         <div className="w-0.5 flex-1 bg-border mt-2" />
                       )}
@@ -256,7 +268,7 @@ export default function ExperienceManagementPage() {
                         <div>
                           <div className="flex items-center gap-2 flex-wrap">
                             <h3 className="font-semibold text-lg">{exp.position}</h3>
-                            {!exp.end_date && (
+                            {(exp.is_current || !exp.end_date) && (
                               <span className="px-2 py-0.5 text-xs bg-accent/10 text-accent rounded-full">
                                 Current
                               </span>
@@ -291,6 +303,7 @@ export default function ExperienceManagementPage() {
                           <button
                             onClick={() => openModal(exp)}
                             className="p-2 text-muted hover:text-foreground hover:bg-surface-secondary rounded-lg transition-colors"
+                            title="Edit experience"
                           >
                             <FaEdit className="w-4 h-4" />
                           </button>
@@ -298,6 +311,7 @@ export default function ExperienceManagementPage() {
                             onClick={() => handleDelete(exp.id)}
                             disabled={deleting === exp.id}
                             className="p-2 text-muted hover:text-danger hover:bg-danger/10 rounded-lg transition-colors disabled:opacity-50"
+                            title="Delete experience"
                           >
                             {deleting === exp.id ? (
                               <Spinner size="sm" />
@@ -348,7 +362,7 @@ export default function ExperienceManagementPage() {
             <Form onSubmit={handleSubmit}>
               <Modal.Body className="space-y-4">
                 {error && (
-                  <div className="p-3 rounded-lg bg-danger/10 border border-danger/20">
+                  <div className="p-3 rounded-lg bg-danger/10 border-danger-soft-hover">
                     <p className="text-sm text-danger">{error}</p>
                   </div>
                 )}
@@ -358,7 +372,7 @@ export default function ExperienceManagementPage() {
                   isRequired
                   value={editingExperience?.company || ""}
                   onChange={(value) =>
-                    setEditingExperience((prev) => ({ ...prev, company: value }))
+                    setEditingExperience((prev) => prev ? ({ ...prev, company: value }) : prev)
                   }
                 >
                   <Label>Company Name</Label>
@@ -366,12 +380,36 @@ export default function ExperienceManagementPage() {
                   <FieldError />
                 </TextField>
 
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <TextField
+                    name="company_logo"
+                    value={editingExperience?.company_logo || ""}
+                    onChange={(value) =>
+                      setEditingExperience((prev) => prev ? ({ ...prev, company_logo: value }) : prev)
+                    }
+                  >
+                    <Label>Company Logo URL (optional)</Label>
+                    <Input placeholder="https://example.com/logo.png" />
+                  </TextField>
+
+                  <TextField
+                    name="company_url"
+                    value={editingExperience?.company_url || ""}
+                    onChange={(value) =>
+                      setEditingExperience((prev) => prev ? ({ ...prev, company_url: value }) : prev)
+                    }
+                  >
+                    <Label>Company Website (optional)</Label>
+                    <Input placeholder="https://company.com" />
+                  </TextField>
+                </div>
+
                 <TextField
                   name="position"
                   isRequired
                   value={editingExperience?.position || ""}
                   onChange={(value) =>
-                    setEditingExperience((prev) => ({ ...prev, position: value }))
+                    setEditingExperience((prev) => prev ? ({ ...prev, position: value }) : prev)
                   }
                 >
                   <Label>Position / Role</Label>
@@ -384,7 +422,7 @@ export default function ExperienceManagementPage() {
                     name="location"
                     value={editingExperience?.location || ""}
                     onChange={(value) =>
-                      setEditingExperience((prev) => ({ ...prev, location: value }))
+                      setEditingExperience((prev) => prev ? ({ ...prev, location: value }) : prev)
                     }
                   >
                     <Label>Location (optional)</Label>
@@ -393,9 +431,9 @@ export default function ExperienceManagementPage() {
 
                   <Select
                     name="type"
-                    defaultSelectedKey={editingExperience?.type || "full-time"}
+                    selectedKey={editingExperience?.type || "full-time"}
                     onSelectionChange={(key) =>
-                      setEditingExperience((prev) => ({ ...prev, type: key as string }))
+                      setEditingExperience((prev) => prev ? ({ ...prev, type: key as string }) : prev)
                     }
                   >
                     <Label>Employment Type</Label>
@@ -421,7 +459,7 @@ export default function ExperienceManagementPage() {
                   isRequired
                   value={editingExperience?.description || ""}
                   onChange={(value) =>
-                    setEditingExperience((prev) => ({ ...prev, description: value }))
+                    setEditingExperience((prev) => prev ? ({ ...prev, description: value }) : prev)
                   }
                 >
                   <Label>Description</Label>
@@ -439,7 +477,7 @@ export default function ExperienceManagementPage() {
                     isRequired
                     value={editingExperience?.start_date || ""}
                     onChange={(value) =>
-                      setEditingExperience((prev) => ({ ...prev, start_date: value }))
+                      setEditingExperience((prev) => prev ? ({ ...prev, start_date: value }) : prev)
                     }
                   >
                     <Label>Start Date</Label>
@@ -453,7 +491,7 @@ export default function ExperienceManagementPage() {
                     isDisabled={isCurrent}
                     value={editingExperience?.end_date || ""}
                     onChange={(value) =>
-                      setEditingExperience((prev) => ({ ...prev, end_date: value }))
+                      setEditingExperience((prev) => prev ? ({ ...prev, end_date: value }) : prev)
                     }
                   >
                     <Label>End Date</Label>
@@ -469,7 +507,9 @@ export default function ExperienceManagementPage() {
                   onChange={(checked) => {
                     setIsCurrent(checked);
                     if (checked) {
-                      setEditingExperience((prev) => ({ ...prev, end_date: null }));
+                      setEditingExperience((prev) => prev ? ({ ...prev, end_date: null, is_current: true }) : prev);
+                    } else {
+                      setEditingExperience((prev) => prev ? ({ ...prev, is_current: false }) : prev);
                     }
                   }}
                 >
@@ -511,6 +551,7 @@ export default function ExperienceManagementPage() {
                             type="button"
                             onClick={() => removeTechnology(tech)}
                             className="hover:text-danger"
+                            title="Remove technology"
                           >
                             ×
                           </button>
@@ -519,6 +560,22 @@ export default function ExperienceManagementPage() {
                     </div>
                   )}
                 </div>
+
+                <TextField
+                  name="sort_order"
+                  type="number"
+                  value={String(editingExperience?.sort_order || 0)}
+                  onChange={(value) =>
+                    setEditingExperience((prev) => prev ? ({
+                      ...prev,
+                      sort_order: parseInt(value) || 0,
+                    }) : prev)
+                  }
+                >
+                  <Label>Sort Order</Label>
+                  <Input placeholder="0" />
+                  <Description>Lower numbers appear first</Description>
+                </TextField>
               </Modal.Body>
               <Modal.Footer>
                 <Button variant="secondary" slot="close">

@@ -16,34 +16,25 @@ import {
   Checkbox,
 } from "@heroui/react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaPlus, FaEdit, FaTrash, FaBlog, FaEye, FaCalendar } from "react-icons/fa";
+import { FaPlus, FaEdit, FaTrash, FaBlog, FaEye, FaCalendar, FaClock } from "react-icons/fa";
+import { createClient } from "@/lib/supabase/client";
+import type { BlogPost } from "@/lib/supabase/types";
 import Link from "next/link";
-
-interface BlogPost {
-  slug: string;
-  title: string;
-  description: string;
-  content: string;
-  date: string;
-  tags: string[];
-  image?: string;
-  published: boolean;
-}
+import Image from "next/image";
 
 const defaultPost: Partial<BlogPost> = {
   slug: "",
   title: "",
-  description: "",
+  excerpt: "",
   content: "",
-  date: new Date().toISOString().split("T")[0],
+  cover_image: "",
   tags: [],
-  image: "",
+  author: "",
   published: false,
+  is_featured: false,
+  reading_time: 5,
+  sort_order: 0,
 };
-
-// For now, we'll use local storage to manage blog posts
-// In production, you'd want to use a CMS or database
-const STORAGE_KEY = "admin_blog_posts";
 
 export default function BlogManagementPage() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
@@ -55,26 +46,26 @@ export default function BlogManagementPage() {
   const [deleting, setDeleting] = useState<string | null>(null);
   const [error, setError] = useState("");
 
+  const supabase = createClient();
+
   useEffect(() => {
-    loadPosts();
+    fetchPosts();
   }, []);
 
-  const loadPosts = () => {
+  const fetchPosts = async () => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        setPosts(JSON.parse(stored));
-      }
+      const { data, error } = await supabase
+        .from("blog_posts")
+        .select("*")
+        .order("published_at", { ascending: false, nullsFirst: false });
+
+      if (error) throw error;
+      setPosts(data || []);
     } catch (error) {
-      console.error("Error loading posts:", error);
+      console.error("Error fetching posts:", error);
     } finally {
       setLoading(false);
     }
-  };
-
-  const savePosts = (newPosts: BlogPost[]) => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newPosts));
-    setPosts(newPosts);
   };
 
   const generateSlug = (title: string) => {
@@ -84,14 +75,19 @@ export default function BlogManagementPage() {
       .replace(/(^-|-$)/g, "");
   };
 
+  const calculateReadingTime = (content: string) => {
+    const wordsPerMinute = 200;
+    const words = content.trim().split(/\s+/).length;
+    return Math.max(1, Math.ceil(words / wordsPerMinute));
+  };
+
   const openModal = (post?: BlogPost) => {
     if (post) {
       setEditingPost(post);
-      setTagInput("");
     } else {
       setEditingPost({ ...defaultPost });
-      setTagInput("");
     }
+    setTagInput("");
     setIsModalOpen(true);
     setError("");
   };
@@ -107,19 +103,19 @@ export default function BlogManagementPage() {
     if (!tagInput.trim()) return;
     const tag = tagInput.trim().toLowerCase();
     if (!editingPost?.tags?.includes(tag)) {
-      setEditingPost((prev) => ({
+      setEditingPost((prev) => prev ? ({
         ...prev,
-        tags: [...(prev?.tags || []), tag],
-      }));
+        tags: [...(prev.tags || []), tag],
+      }) : prev);
     }
     setTagInput("");
   };
 
   const removeTag = (tag: string) => {
-    setEditingPost((prev) => ({
+    setEditingPost((prev) => prev ? ({
       ...prev,
-      tags: prev?.tags?.filter((t) => t !== tag) || [],
-    }));
+      tags: prev.tags?.filter((t) => t !== tag) || [],
+    }) : prev);
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -130,32 +126,51 @@ export default function BlogManagementPage() {
     setError("");
 
     const slug = editingPost.slug || generateSlug(editingPost.title || "");
+    const readingTime = calculateReadingTime(editingPost.content || "");
 
     try {
-      const newPost: BlogPost = {
-        slug,
-        title: editingPost.title || "",
-        description: editingPost.description || "",
-        content: editingPost.content || "",
-        date: editingPost.date || new Date().toISOString().split("T")[0],
-        tags: editingPost.tags || [],
-        image: editingPost.image,
-        published: editingPost.published || false,
-      };
+      if (editingPost.id) {
+        // Update
+        const { error } = await supabase
+          .from("blog_posts")
+          .update({
+            slug,
+            title: editingPost.title,
+            excerpt: editingPost.excerpt || null,
+            content: editingPost.content,
+            cover_image: editingPost.cover_image || null,
+            tags: editingPost.tags || [],
+            author: editingPost.author || null,
+            published: editingPost.published,
+            is_featured: editingPost.is_featured,
+            published_at: editingPost.published ? editingPost.published_at || new Date().toISOString() : null,
+            reading_time: readingTime,
+            sort_order: editingPost.sort_order,
+          })
+          .eq("id", editingPost.id);
 
-      // Check for existing post with same slug
-      const existingIndex = posts.findIndex((p) => p.slug === slug);
-
-      if (existingIndex !== -1) {
-        // Update existing
-        const updated = [...posts];
-        updated[existingIndex] = newPost;
-        savePosts(updated);
+        if (error) throw error;
       } else {
-        // Add new
-        savePosts([newPost, ...posts]);
+        // Create
+        const { error } = await supabase.from("blog_posts").insert({
+          slug,
+          title: editingPost.title,
+          excerpt: editingPost.excerpt || null,
+          content: editingPost.content,
+          cover_image: editingPost.cover_image || null,
+          tags: editingPost.tags || [],
+          author: editingPost.author || null,
+          published: editingPost.published || false,
+          is_featured: editingPost.is_featured || false,
+          published_at: editingPost.published ? new Date().toISOString() : null,
+          reading_time: readingTime,
+          sort_order: editingPost.sort_order || 0,
+        });
+
+        if (error) throw error;
       }
 
+      await fetchPosts();
       closeModal();
     } catch (error: unknown) {
       console.error("Error saving post:", error);
@@ -165,13 +180,14 @@ export default function BlogManagementPage() {
     }
   };
 
-  const handleDelete = (slug: string) => {
+  const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this post?")) return;
 
-    setDeleting(slug);
+    setDeleting(id);
     try {
-      const updated = posts.filter((p) => p.slug !== slug);
-      savePosts(updated);
+      const { error } = await supabase.from("blog_posts").delete().eq("id", id);
+      if (error) throw error;
+      await fetchPosts();
     } catch (error) {
       console.error("Error deleting post:", error);
       alert("Failed to delete post");
@@ -180,7 +196,8 @@ export default function BlogManagementPage() {
     }
   };
 
-  const formatDate = (dateStr: string) => {
+  const formatDate = (dateStr: string | null) => {
+    if (!dateStr) return "Draft";
     const date = new Date(dateStr);
     return date.toLocaleDateString("en-US", {
       month: "short",
@@ -204,16 +221,6 @@ export default function BlogManagementPage() {
           New Post
         </Button>
       </div>
-
-      {/* Info Card */}
-      <Card className="p-4 bg-accent/5 border-accent/20">
-        <p className="text-sm">
-          <strong>Note:</strong> Blog posts are currently stored locally.
-          For production, you&apos;ll want to create MDX files in the{" "}
-          <code className="px-1 py-0.5 bg-surface rounded text-xs">content/blog/</code> folder
-          or integrate with a CMS.
-        </p>
-      </Card>
 
       {/* Posts List */}
       {loading ? (
@@ -239,17 +246,29 @@ export default function BlogManagementPage() {
           <AnimatePresence mode="popLayout">
             {posts.map((post, index) => (
               <motion.div
-                key={post.slug}
+                key={post.id}
                 layout
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ delay: index * 0.05 }}
               >
-                <Card className="p-6">
+                <Card className="p-4 sm:p-6">
                   <div className="flex flex-col sm:flex-row gap-4">
+                    {/* Cover Image */}
+                    {post.cover_image && (
+                      <div className="relative w-full sm:w-40 h-32 sm:h-24 rounded-lg overflow-hidden shrink-0 bg-muted/20">
+                        <Image
+                          src={post.cover_image}
+                          alt={post.title}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    )}
+
                     {/* Content */}
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
@@ -265,17 +284,28 @@ export default function BlogManagementPage() {
                             >
                               {post.published ? "Published" : "Draft"}
                             </span>
+                            {post.is_featured && (
+                              <span className="px-2 py-0.5 text-xs bg-accent/10 text-accent rounded-full">
+                                Featured
+                              </span>
+                            )}
                           </div>
                           <p className="text-muted text-sm mt-1 line-clamp-2">
-                            {post.description}
+                            {post.excerpt || "No excerpt provided"}
                           </p>
-                          <div className="flex items-center gap-3 mt-2 text-sm text-muted">
+                          <div className="flex items-center gap-3 mt-2 text-sm text-muted flex-wrap">
                             <span className="flex items-center gap-1">
                               <FaCalendar className="w-3 h-3" />
-                              {formatDate(post.date)}
+                              {formatDate(post.published_at)}
                             </span>
-                            {post.tags?.length > 0 && (
+                            {post.reading_time && (
                               <span className="flex items-center gap-1">
+                                <FaClock className="w-3 h-3" />
+                                {post.reading_time} min read
+                              </span>
+                            )}
+                            {post.tags && post.tags.length > 0 && (
+                              <span className="flex items-center gap-1 flex-wrap">
                                 {post.tags.slice(0, 3).map((tag) => (
                                   <span
                                     key={tag}
@@ -295,12 +325,13 @@ export default function BlogManagementPage() {
                         </div>
 
                         {/* Actions */}
-                        <div className="flex gap-1">
+                        <div className="flex gap-1 shrink-0">
                           {post.published && (
                             <Link
                               href={`/blog/${post.slug}`}
                               target="_blank"
                               className="p-2 text-muted hover:text-foreground hover:bg-surface-secondary rounded-lg transition-colors"
+                              title="View post"
                             >
                               <FaEye className="w-4 h-4" />
                             </Link>
@@ -308,15 +339,17 @@ export default function BlogManagementPage() {
                           <button
                             onClick={() => openModal(post)}
                             className="p-2 text-muted hover:text-foreground hover:bg-surface-secondary rounded-lg transition-colors"
+                            title="Edit post"
                           >
                             <FaEdit className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => handleDelete(post.slug)}
-                            disabled={deleting === post.slug}
+                            onClick={() => handleDelete(post.id)}
+                            disabled={deleting === post.id}
                             className="p-2 text-muted hover:text-danger hover:bg-danger/10 rounded-lg transition-colors disabled:opacity-50"
+                            title="Delete post"
                           >
-                            {deleting === post.slug ? (
+                            {deleting === post.id ? (
                               <Spinner size="sm" />
                             ) : (
                               <FaTrash className="w-4 h-4" />
@@ -340,15 +373,13 @@ export default function BlogManagementPage() {
             <Modal.CloseTrigger />
             <Modal.Header>
               <Modal.Heading>
-                {editingPost?.slug && posts.some((p) => p.slug === editingPost.slug)
-                  ? "Edit Post"
-                  : "New Post"}
+                {editingPost?.id ? "Edit Post" : "New Post"}
               </Modal.Heading>
             </Modal.Header>
             <Form onSubmit={handleSubmit}>
               <Modal.Body className="space-y-4">
                 {error && (
-                  <div className="p-3 rounded-lg bg-danger/10 border border-danger/20">
+                  <div className="p-3 rounded-lg bg-danger/10 border-danger-soft-hover">
                     <p className="text-sm text-danger">{error}</p>
                   </div>
                 )}
@@ -358,11 +389,11 @@ export default function BlogManagementPage() {
                   isRequired
                   value={editingPost?.title || ""}
                   onChange={(value) =>
-                    setEditingPost((prev) => ({
+                    setEditingPost((prev) => prev ? ({
                       ...prev,
                       title: value,
-                      slug: prev?.slug || generateSlug(value),
-                    }))
+                      slug: prev.slug || generateSlug(value),
+                    }) : prev)
                   }
                 >
                   <Label>Post Title</Label>
@@ -375,7 +406,7 @@ export default function BlogManagementPage() {
                   isRequired
                   value={editingPost?.slug || ""}
                   onChange={(value) =>
-                    setEditingPost((prev) => ({ ...prev, slug: value }))
+                    setEditingPost((prev) => prev ? ({ ...prev, slug: value }) : prev)
                   }
                 >
                   <Label>URL Slug</Label>
@@ -385,19 +416,17 @@ export default function BlogManagementPage() {
                 </TextField>
 
                 <TextField
-                  name="description"
-                  isRequired
-                  value={editingPost?.description || ""}
+                  name="excerpt"
+                  value={editingPost?.excerpt || ""}
                   onChange={(value) =>
-                    setEditingPost((prev) => ({ ...prev, description: value }))
+                    setEditingPost((prev) => prev ? ({ ...prev, excerpt: value }) : prev)
                   }
                 >
-                  <Label>Description</Label>
+                  <Label>Excerpt</Label>
                   <TextArea
                     placeholder="Brief description for SEO and previews"
                     rows={2}
                   />
-                  <FieldError />
                 </TextField>
 
                 <TextField
@@ -405,7 +434,7 @@ export default function BlogManagementPage() {
                   isRequired
                   value={editingPost?.content || ""}
                   onChange={(value) =>
-                    setEditingPost((prev) => ({ ...prev, content: value }))
+                    setEditingPost((prev) => prev ? ({ ...prev, content: value }) : prev)
                   }
                 >
                   <Label>Content (Markdown)</Label>
@@ -420,22 +449,21 @@ export default function BlogManagementPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <TextField
-                    name="date"
-                    type="date"
-                    value={editingPost?.date || ""}
+                    name="author"
+                    value={editingPost?.author || ""}
                     onChange={(value) =>
-                      setEditingPost((prev) => ({ ...prev, date: value }))
+                      setEditingPost((prev) => prev ? ({ ...prev, author: value }) : prev)
                     }
                   >
-                    <Label>Publish Date</Label>
-                    <Input />
+                    <Label>Author (optional)</Label>
+                    <Input placeholder="John Doe" />
                   </TextField>
 
                   <TextField
-                    name="image"
-                    value={editingPost?.image || ""}
+                    name="cover_image"
+                    value={editingPost?.cover_image || ""}
                     onChange={(value) =>
-                      setEditingPost((prev) => ({ ...prev, image: value }))
+                      setEditingPost((prev) => prev ? ({ ...prev, cover_image: value }) : prev)
                     }
                   >
                     <Label>Cover Image URL (optional)</Label>
@@ -474,6 +502,7 @@ export default function BlogManagementPage() {
                           type="button"
                           onClick={() => removeTag(tag)}
                           className="ml-1 text-muted hover:text-danger"
+                          title="Remove tag"
                         >
                           ×
                         </button>
@@ -482,17 +511,47 @@ export default function BlogManagementPage() {
                   </div>
                 </div>
 
-                <Checkbox
-                  isSelected={editingPost?.published || false}
-                  onChange={(checked) =>
-                    setEditingPost((prev) => ({ ...prev, published: checked }))
+                <TextField
+                  name="sort_order"
+                  type="number"
+                  value={String(editingPost?.sort_order || 0)}
+                  onChange={(value) =>
+                    setEditingPost((prev) => prev ? ({
+                      ...prev,
+                      sort_order: parseInt(value) || 0,
+                    }) : prev)
                   }
                 >
-                  <Checkbox.Control>
-                    <Checkbox.Indicator />
-                  </Checkbox.Control>
-                  <Label>Publish this post</Label>
-                </Checkbox>
+                  <Label>Sort Order</Label>
+                  <Input placeholder="0" />
+                  <Description>Lower numbers appear first</Description>
+                </TextField>
+
+                <div className="flex gap-4">
+                  <Checkbox
+                    isSelected={editingPost?.published || false}
+                    onChange={(checked) =>
+                      setEditingPost((prev) => prev ? ({ ...prev, published: checked }) : prev)
+                    }
+                  >
+                    <Checkbox.Control>
+                      <Checkbox.Indicator />
+                    </Checkbox.Control>
+                    <Label>Publish this post</Label>
+                  </Checkbox>
+
+                  <Checkbox
+                    isSelected={editingPost?.is_featured || false}
+                    onChange={(checked) =>
+                      setEditingPost((prev) => prev ? ({ ...prev, is_featured: checked }) : prev)
+                    }
+                  >
+                    <Checkbox.Control>
+                      <Checkbox.Indicator />
+                    </Checkbox.Control>
+                    <Label>Featured</Label>
+                  </Checkbox>
+                </div>
               </Modal.Body>
               <Modal.Footer>
                 <Button variant="secondary" slot="close">
@@ -502,11 +561,7 @@ export default function BlogManagementPage() {
                   {({ isPending }) => (
                     <>
                       {isPending && <Spinner color="current" size="sm" />}
-                      {isPending
-                        ? "Saving..."
-                        : editingPost?.slug && posts.some((p) => p.slug === editingPost.slug)
-                          ? "Update"
-                          : "Create"}
+                      {isPending ? "Saving..." : editingPost?.id ? "Update" : "Create"}
                     </>
                   )}
                 </Button>

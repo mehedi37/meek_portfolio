@@ -39,3 +39,39 @@ export async function createClient() {
     }
   );
 }
+
+/**
+ * Create a Supabase client for service role operations
+ * This client has full admin access and bypasses RLS
+ * Use only for trusted operations like generateStaticParams
+ * DO NOT expose in API routes accessible to users
+ */
+export function createServiceRoleClient() {
+  const { createClient } = require("@supabase/supabase-js");
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  // Return a dummy client if env vars are not set (for build time)
+  if (!supabaseUrl || !serviceRoleKey) {
+    console.warn("Supabase service role credentials not configured. Using dummy client.");
+    return {
+      from: () => ({
+        select: () => ({
+          eq: () => Promise.resolve({ data: [], error: null })
+        })
+      })
+    };
+  }
+
+  return createClient(
+    supabaseUrl,
+    serviceRoleKey,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    }
+  );
+}

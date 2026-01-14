@@ -5,129 +5,8 @@ import { notFound } from "next/navigation";
 import { FadeInSection } from "@/components/animations";
 import { Container } from "@/components/layout/Container";
 import { formatDate } from "@/lib/utils";
-import { FaCalendar, FaClock, FaArrowLeft } from "react-icons/fa";
-import type { BlogPost } from "@/lib/supabase/types";
-
-// Demo blog posts using Supabase BlogPost type with snake_case field names
-// In production, fetch from Supabase using: supabase.from('blog_posts').select('*').eq('slug', slug)
-const blogPosts: Record<string, BlogPost> = {
-  "building-scroll-animations-framer-motion": {
-    id: "1",
-    slug: "building-scroll-animations-framer-motion",
-    title: "Building Scroll-Triggered Animations with Framer Motion",
-    excerpt: "Learn how to create engaging scroll-based animations that respond to user scrolling.",
-    content: `
-# Building Scroll-Triggered Animations with Framer Motion
-
-Scroll-triggered animations are a powerful way to create engaging user experiences. In this tutorial, we'll explore how to use Framer Motion's \`useScroll\` and \`useTransform\` hooks to create beautiful animations.
-
-## Getting Started
-
-First, install Framer Motion:
-
-\`\`\`bash
-npm install framer-motion
-\`\`\`
-
-## Using useScroll
-
-The \`useScroll\` hook provides scroll progress values:
-
-\`\`\`tsx
-import { useScroll, useTransform, motion } from "framer-motion";
-
-function ScrollAnimation() {
-  const { scrollYProgress } = useScroll();
-  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
-
-  return (
-    <motion.div style={{ opacity }}>
-      This fades as you scroll
-    </motion.div>
-  );
-}
-\`\`\`
-
-## Best Practices
-
-1. Use \`useSpring\` for smoother animations
-2. Optimize with \`will-change\` CSS property
-3. Test on various devices for performance
-4. Respect user preferences for reduced motion
-
-## Conclusion
-
-Scroll-triggered animations can significantly enhance user experience when implemented thoughtfully. Remember to prioritize performance and accessibility.
-    `,
-    cover_image: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800",
-    published_at: "2024-01-15T00:00:00.000Z",
-    tags: ["React", "Framer Motion", "Animation", "Tutorial"],
-    reading_time: 8,
-    published: true,
-    author: null,
-    created_at: "2024-01-15T00:00:00.000Z",
-    updated_at: null,
-  },
-  "next-js-14-app-router-guide": {
-    id: "2",
-    slug: "next-js-14-app-router-guide",
-    title: "Complete Guide to Next.js 14 App Router",
-    excerpt: "Everything you need to know about the new App Router in Next.js 14.",
-    content: `
-# Complete Guide to Next.js 14 App Router
-
-Next.js 14 brings significant improvements to the App Router architecture. Let's dive deep into its features.
-
-## Server Components
-
-By default, components in the App Router are Server Components:
-
-\`\`\`tsx
-// This is a Server Component
-async function BlogPosts() {
-  const posts = await fetchPosts(); // Direct database access
-  return <PostList posts={posts} />;
-}
-\`\`\`
-
-## Client Components
-
-Use \`"use client"\` for interactive components:
-
-\`\`\`tsx
-"use client";
-
-export function LikeButton() {
-  const [likes, setLikes] = useState(0);
-  return <button onClick={() => setLikes(likes + 1)}>{likes}</button>;
-}
-\`\`\`
-
-## Loading States
-
-Create instant loading UI with loading.tsx:
-
-\`\`\`tsx
-// app/blog/loading.tsx
-export default function Loading() {
-  return <BlogPostsSkeleton />;
-}
-\`\`\`
-
-## Conclusion
-
-The App Router provides a more intuitive and powerful way to build Next.js applications.
-    `,
-    cover_image: "https://images.unsplash.com/photo-1618477388954-7852f32655ec?w=800",
-    published_at: "2024-01-10T00:00:00.000Z",
-    tags: ["Next.js", "React", "Web Development"],
-    reading_time: 12,
-    published: true,
-    author: null,
-    created_at: "2024-01-10T00:00:00.000Z",
-    updated_at: null,
-  },
-};
+import { getBlogPostBySlug, getAllBlogSlugs } from "@/lib/supabase/data";
+import { FaCalendar, FaClock, FaArrowLeft, FaShare, FaTwitter, FaLinkedin } from "react-icons/fa";
 
 interface BlogPostPageProps {
   params: Promise<{ slug: string }>;
@@ -137,15 +16,15 @@ export async function generateMetadata({
   params,
 }: BlogPostPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const post = blogPosts[slug];
+  const post = await getBlogPostBySlug(slug);
 
   if (!post) {
     return { title: "Post Not Found" };
   }
 
   return {
-    title: post.title,
-    description: post.excerpt,
+    title: `${post.title} | Blog`,
+    description: post.excerpt ?? undefined,
     openGraph: {
       title: post.title,
       description: post.excerpt ?? undefined,
@@ -153,20 +32,34 @@ export async function generateMetadata({
       publishedTime: post.published_at ?? undefined,
       images: post.cover_image ? [{ url: post.cover_image }] : [],
     },
+    twitter: {
+      card: "summary_large_image",
+      title: post.title,
+      description: post.excerpt ?? undefined,
+      images: post.cover_image ? [post.cover_image] : [],
+    },
   };
 }
 
 export async function generateStaticParams() {
-  return Object.keys(blogPosts).map((slug) => ({ slug }));
+  const slugs = await getAllBlogSlugs();
+  return slugs.map((slug) => ({ slug }));
 }
+
+// Revalidate every 15 minutes
+export const revalidate = 900;
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const { slug } = await params;
-  const post = blogPosts[slug];
+  const post = await getBlogPostBySlug(slug);
 
   if (!post) {
     notFound();
   }
+
+  // Get share URLs
+  const shareUrl = encodeURIComponent(`${process.env.NEXT_PUBLIC_SITE_URL || ''}/blog/${slug}`);
+  const shareTitle = encodeURIComponent(post.title);
 
   return (
     <article className="min-h-screen pt-24 pb-16">
@@ -218,6 +111,29 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                   {post.reading_time} min read
                 </span>
               )}
+              
+              {/* Share buttons */}
+              <div className="flex items-center gap-2 ml-auto">
+                <span className="text-xs text-muted-foreground mr-1">Share:</span>
+                <a
+                  href={`https://twitter.com/intent/tweet?url=${shareUrl}&text=${shareTitle}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 rounded-lg hover:bg-accent/10 text-muted-foreground hover:text-accent transition-colors"
+                  title="Share on Twitter"
+                >
+                  <FaTwitter size={14} />
+                </a>
+                <a
+                  href={`https://www.linkedin.com/shareArticle?mini=true&url=${shareUrl}&title=${shareTitle}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 rounded-lg hover:bg-accent/10 text-muted-foreground hover:text-accent transition-colors"
+                  title="Share on LinkedIn"
+                >
+                  <FaLinkedin size={14} />
+                </a>
+              </div>
             </div>
           </header>
         </FadeInSection>
@@ -225,7 +141,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         {/* Cover Image */}
         {post.cover_image && (
           <FadeInSection>
-            <div className="relative aspect-video rounded-xl overflow-hidden mb-12">
+            <div className="relative aspect-video rounded-xl overflow-hidden mb-12 shadow-xl">
               <Image
                 src={post.cover_image}
                 alt={post.title}
@@ -233,7 +149,17 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 className="object-cover"
                 priority
               />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/20 to-transparent" />
             </div>
+          </FadeInSection>
+        )}
+
+        {/* Excerpt */}
+        {post.excerpt && (
+          <FadeInSection>
+            <p className="text-xl text-muted-foreground italic border-l-4 border-accent pl-4 mb-8">
+              {post.excerpt}
+            </p>
           </FadeInSection>
         )}
 
@@ -241,11 +167,17 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         <FadeInSection>
           <div
             className="prose prose-lg dark:prose-invert max-w-none
-              prose-headings:font-bold
-              prose-a:text-accent hover:prose-a:underline
-              prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:rounded
-              prose-pre:bg-card prose-pre:border prose-pre:border-border"
-            dangerouslySetInnerHTML={{ __html: post.content }}
+              prose-headings:font-bold prose-headings:tracking-tight
+              prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4
+              prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+              prose-p:leading-relaxed prose-p:text-foreground/90
+              prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+              prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm
+              prose-pre:bg-card prose-pre:border prose-pre:border-border prose-pre:rounded-xl
+              prose-img:rounded-xl prose-img:shadow-lg
+              prose-blockquote:border-accent prose-blockquote:bg-accent/5 prose-blockquote:rounded-r-lg prose-blockquote:py-1
+              prose-li:marker:text-accent"
+            dangerouslySetInnerHTML={{ __html: post.content || '' }}
           />
         </FadeInSection>
 
@@ -260,9 +192,10 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             </p>
             <Link
               href="/blog"
-              className="text-accent hover:underline"
+              className="inline-flex items-center gap-2 text-accent hover:underline"
             >
-              ← More posts
+              <FaArrowLeft size={12} />
+              More posts
             </Link>
           </div>
         </FadeInSection>

@@ -1,10 +1,313 @@
-/* ============================================
-   Global Styles - ORBITAL Portfolio Theme
-   Modern Dark Theme with Glassmorphism
-   ============================================ */
-
-/* Tailwind CSS v4 - Must be first */
 @import "tailwindcss";
-
-/* HeroUI v3 styles - Must be after Tailwind */
 @import "@heroui/styles";
+
+/* ==========================================================================
+   ORBITAL Portfolio - Minimal HeroUI v3 Theme Overrides
+   Clean, minimal CSS using HeroUI's semantic variables
+   ========================================================================== */
+
+/* ==========================================================================
+   Custom Color Palette (shared by both themes)
+   ========================================================================== */
+
+:root {
+  /* Primary - Electric Violet */
+  --color-primary: oklch(0.65 0.25 285);
+  --color-primary-light: oklch(0.75 0.2 285);
+  --color-primary-dark: oklch(0.5 0.28 285);
+  --color-primary-glow: oklch(0.65 0.25 285 / 0.4);
+
+  /* Secondary - Cyber Cyan */
+  --color-secondary: oklch(0.75 0.15 195);
+  --color-secondary-light: oklch(0.85 0.12 195);
+
+  /* Tertiary - Neon Magenta */
+  --color-tertiary: oklch(0.7 0.25 330);
+  --color-tertiary-glow: oklch(0.7 0.25 330 / 0.4);
+
+  /* Typography */
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+
+  /* Z-Index System */
+  --z-background: -1;
+  --z-content: 10;
+  --z-sticky: 30;
+  --z-overlay: 50;
+  --z-modal: 60;
+}
+
+/* ==========================================================================
+   Dark Theme (Default) - HeroUI Overrides
+   ========================================================================== */
+
+[data-theme="dark"],
+.dark {
+  /* HeroUI semantic colors */
+  --background: oklch(0.08 0.02 280);
+  --foreground: oklch(0.95 0.01 280);
+  --surface: oklch(0.14 0.02 280 / 0.9);
+  --surface-foreground: var(--foreground);
+  --overlay: oklch(0.16 0.025 280 / 0.95);
+  --overlay-foreground: var(--foreground);
+  --muted: oklch(0.55 0.02 280);
+  --default: oklch(0.2 0.02 280 / 0.85);
+  --default-foreground: var(--foreground);
+  --accent: var(--color-primary);
+  --accent-foreground: oklch(0.98 0 0);
+  --success: oklch(0.72 0.2 145);
+  --success-foreground: oklch(0.98 0 0);
+  --warning: oklch(0.82 0.15 80);
+  --warning-foreground: oklch(0.15 0.02 80);
+  --danger: oklch(0.62 0.25 25);
+  --danger-foreground: oklch(0.98 0 0);
+  --border: oklch(0.35 0.04 285 / 0.25);
+  --separator: oklch(0.3 0.02 280 / 0.4);
+  --focus: var(--color-primary);
+  --link: var(--color-primary-light);
+  --scrollbar: oklch(0.35 0.02 280);
+
+  /* Field styling */
+  --field-background: oklch(0.16 0.02 280 / 0.8);
+  --field-foreground: var(--foreground);
+  --field-border: oklch(0.35 0.04 285 / 0.3);
+
+  /* Shadows with subtle glow */
+  --surface-shadow: 0 4px 16px oklch(0 0 0 / 0.25);
+  --overlay-shadow: 0 8px 32px oklch(0 0 0 / 0.35);
+
+  /* Custom design tokens */
+  --glass-bg: oklch(0.12 0.02 280 / 0.65);
+  --glass-border: oklch(0.45 0.06 285 / 0.2);
+  --gradient-hero: linear-gradient(
+    135deg,
+    oklch(0.06 0.02 280) 0%,
+    oklch(0.07 0.03 285) 50%,
+    oklch(0.06 0.025 300) 100%
+  );
+}
+
+/* ==========================================================================
+   Light Theme - HeroUI Overrides
+   Clean, bright theme with good contrast
+   ========================================================================== */
+
+[data-theme="light"],
+.light {
+  /* HeroUI semantic colors */
+  --background: oklch(0.98 0.005 280);
+  --foreground: oklch(0.15 0.02 280);
+  --surface: oklch(1 0 0 / 0.95);
+  --surface-foreground: var(--foreground);
+  --overlay: oklch(1 0 0 / 0.98);
+  --overlay-foreground: var(--foreground);
+  --muted: oklch(0.45 0.015 280);
+  --default: oklch(0.94 0.006 280);
+  --default-foreground: var(--foreground);
+  --accent: var(--color-primary);
+  --accent-foreground: oklch(0.98 0 0);
+  --success: oklch(0.55 0.18 145);
+  --success-foreground: oklch(0.98 0 0);
+  --warning: oklch(0.7 0.14 75);
+  --warning-foreground: oklch(0.15 0.02 75);
+  --danger: oklch(0.55 0.22 25);
+  --danger-foreground: oklch(0.98 0 0);
+  --border: oklch(0.85 0.01 280);
+  --separator: oklch(0.9 0.005 280);
+  --focus: var(--color-primary);
+  --link: var(--color-primary-dark);
+  --scrollbar: oklch(0.8 0.01 280);
+
+  /* Field styling */
+  --field-background: oklch(1 0 0);
+  --field-foreground: var(--foreground);
+  --field-border: oklch(0.88 0.01 280);
+
+  /* Shadows - softer for light mode */
+  --surface-shadow: 0 2px 8px oklch(0 0 0 / 0.06);
+  --overlay-shadow: 0 4px 16px oklch(0 0 0 / 0.08);
+
+  /* Custom design tokens */
+  --glass-bg: oklch(1 0 0 / 0.8);
+  --glass-border: oklch(0.85 0.01 280);
+  --gradient-hero: linear-gradient(
+    135deg,
+    oklch(0.98 0.003 280) 0%,
+    oklch(0.96 0.01 285) 50%,
+    oklch(0.97 0.008 290) 100%
+  );
+}
+
+/* ==========================================================================
+   Base Styles
+   ========================================================================== */
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--background);
+  color: var(--foreground);
+  line-height: 1.6;
+}
+
+/* ==========================================================================
+   Glass Card Utility
+   ========================================================================== */
+
+.glass-card {
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+}
+
+/* ==========================================================================
+   Gradient Text Utilities
+   ========================================================================== */
+
+.text-gradient-primary {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-tertiary) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.text-gradient-secondary {
+  background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-primary) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ==========================================================================
+   Section Backgrounds (transparent for floating effects)
+   ========================================================================== */
+
+section {
+  position: relative;
+}
+
+/* Hero gradient overlay */
+/* #hero {
+  background: var(--gradient-hero);
+} */
+
+/* ==========================================================================
+   Scrollbar Styling
+   ========================================================================== */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+
+/* ==========================================================================
+   Selection & Focus
+   ========================================================================== */
+
+::selection {
+  background: var(--color-primary);
+  color: oklch(0.98 0 0);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   Code Blocks
+   ========================================================================== */
+
+code {
+  font-family: var(--font-mono);
+  background: var(--surface);
+  padding: 0.2em 0.4em;
+  border-radius: 0.375rem;
+  font-size: 0.9em;
+}
+
+pre {
+  font-family: var(--font-mono);
+  background: var(--surface);
+  padding: 1rem;
+  border-radius: 0.75rem;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+}
+
+pre code {
+  background: none;
+  padding: 0;
+}
+
+/* ==========================================================================
+   Animation Keyframes
+   ========================================================================== */
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Animation utilities */
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.25s ease forwards;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.4s ease forwards;
+}
+
+/* ==========================================================================
+   Responsive Typography
+   ========================================================================== */
+
+.text-hero {
+  font-size: clamp(2.5rem, 5vw + 1rem, 4.5rem);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.text-display {
+  font-size: clamp(2rem, 4vw + 0.5rem, 3.5rem);
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+}
+
+.text-title {
+  font-size: clamp(1.5rem, 3vw + 0.25rem, 2.5rem);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}

@@ -1,25 +1,43 @@
 import { Navbar, Footer } from "@/components/ui";
-import { ScrollProgress } from "@/components/animations";
+import {
+  ScrollProgress,
+  CursorGlow,
+  FloatingShapes,
+  GradientOrbs,
+} from "@/components/animations";
 
 interface MainLayoutProps {
   children: React.ReactNode;
 }
 
 /**
- * Main site layout with navigation, footer, and scroll progress
+ * Main site layout with navigation, footer, and visual effects
  * Used for public-facing pages (home, blog, projects, etc.)
+ *
+ * Visual Elements:
+ * - ScrollProgress: Progress bar at the top
+ * - CursorGlow: Interactive mouse-following glow effect
+ * - FloatingShapes: Geometric shapes that react to scroll
+ * - GradientOrbs: Colorful gradient blobs that move with scroll
  */
 export default function MainLayout({ children }: MainLayoutProps) {
   return (
     <>
-      {/* Scroll progress indicator */}
+      {/* Background visual effects - fixed position, lowest z-index */}
+      <GradientOrbs />
+      <FloatingShapes />
+
+      {/* Scroll progress indicator - highest z-index */}
       <ScrollProgress />
 
-      {/* Navigation */}
+      {/* Interactive cursor glow effect */}
+      <CursorGlow />
+
+      {/* Navigation - high z-index to stay above content */}
       <Navbar />
 
-      {/* Main content */}
-      <main id="main-content" className="relative">
+      {/* Main content with higher z-index than background effects */}
+      <main id="main-content" className="relative z-10">
         {children}
       </main>
 

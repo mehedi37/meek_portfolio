@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { siteConfig } from "@/lib/constants";
-import { Analytics } from "@vercel/analytics/react";
+import { Navbar, Footer } from "@/components/ui";
 
 // Font configuration
 const inter = Inter({
@@ -138,9 +138,6 @@ export default function RootLayout({ children }: RootLayoutProps) {
         </a>
 
         {children}
-
-        {/* Analytics - only in production */}
-        <Analytics />
       </body>
     </html>
   );

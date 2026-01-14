@@ -5,72 +5,8 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import { Button, Chip, Card } from "@heroui/react";
 import { FaGithub, FaExternalLinkAlt, FaArrowRight } from "react-icons/fa";
-import { HiSparkles, HiCode, HiEye } from "react-icons/hi";
+import { HiSparkles, HiCode, HiEye, HiPhotograph } from "react-icons/hi";
 import type { Project } from "@/lib/supabase/types";
-
-// Demo projects
-const DEMO_PROJECTS: Project[] = [
-  {
-    id: "1",
-    slug: "ecommerce-platform",
-    title: "E-Commerce Platform",
-    description: "A full-stack e-commerce solution with real-time inventory, payment processing, and admin dashboard.",
-    long_description: null,
-    image: "https://images.unsplash.com/photo-1557821552-17105176677c?w=800&h=600&fit=crop",
-    images: null,
-    tech_stack: ["Next.js", "TypeScript", "Stripe", "PostgreSQL"],
-    live_url: "https://example.com",
-    github_url: "https://github.com",
-    featured: true,
-    created_at: "2024-01-15T00:00:00.000Z",
-    updated_at: null,
-  },
-  {
-    id: "2",
-    slug: "ai-chat-assistant",
-    title: "AI Chat Assistant",
-    description: "Intelligent chatbot powered by GPT-4 with context awareness and multi-language support.",
-    long_description: null,
-    image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=600&fit=crop",
-    images: null,
-    tech_stack: ["Python", "OpenAI", "React", "FastAPI"],
-    live_url: "https://example.com",
-    github_url: "https://github.com",
-    featured: true,
-    created_at: "2024-02-20T00:00:00.000Z",
-    updated_at: null,
-  },
-  {
-    id: "3",
-    slug: "task-management-app",
-    title: "Task Management App",
-    description: "Collaborative task manager with real-time updates, drag-and-drop, and team workspaces.",
-    long_description: null,
-    image: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=800&h=600&fit=crop",
-    images: null,
-    tech_stack: ["React", "Node.js", "Socket.io", "MongoDB"],
-    live_url: "https://example.com",
-    github_url: "https://github.com",
-    featured: true,
-    created_at: "2024-03-10T00:00:00.000Z",
-    updated_at: null,
-  },
-  {
-    id: "4",
-    slug: "mobile-fitness-app",
-    title: "Mobile Fitness App",
-    description: "Cross-platform fitness tracking app with workout plans, progress charts, and social features.",
-    long_description: null,
-    image: "https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=800&h=600&fit=crop",
-    images: null,
-    tech_stack: ["React Native", "TypeScript", "Firebase"],
-    live_url: null,
-    github_url: "https://github.com",
-    featured: false,
-    created_at: "2024-04-05T00:00:00.000Z",
-    updated_at: null,
-  },
-];
 
 interface ProjectsProps {
   className?: string;
@@ -208,15 +144,17 @@ function ProjectCard({ project, index, featured = false }: { project: Project; i
  * Projects Section - Bento-style grid layout
  * Uses HeroUI v3 Card components
  */
-export function Projects({ className = "", projects = DEMO_PROJECTS }: ProjectsProps) {
+export function Projects({ className = "", projects = [] }: ProjectsProps) {
   const [filter, setFilter] = useState<"all" | "featured">("all");
 
   const filteredProjects = filter === "featured"
     ? projects.filter(p => p.featured)
     : projects;
 
+  const hasProjects = projects.length > 0;
+
   return (
-    <section id="projects" className={`relative py-24 lg:py-32 overflow-hidden bg-background ${className}`}>
+    <section id="projects" className={`relative py-24 lg:py-32 overflow-hidden ${className}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <motion.div
@@ -238,56 +176,78 @@ export function Projects({ className = "", projects = DEMO_PROJECTS }: ProjectsP
           </p>
         </motion.div>
 
-        {/* Filter buttons */}
-        <motion.div
-          className="flex justify-center gap-3 mb-12"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-        >
-          <Button
-            variant={filter === "all" ? "primary" : "ghost"}
-            size="sm"
-            onPress={() => setFilter("all")}
-          >
-            All Projects
-          </Button>
-          <Button
-            variant={filter === "featured" ? "primary" : "ghost"}
-            size="sm"
-            onPress={() => setFilter("featured")}
-          >
-            <HiSparkles className="w-4 h-4 mr-1" />
-            Featured
-          </Button>
-        </motion.div>
+        {hasProjects ? (
+          <>
+            {/* Filter buttons */}
+            <motion.div
+              className="flex justify-center gap-3 mb-12"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+            >
+              <Button
+                variant={filter === "all" ? "primary" : "ghost"}
+                size="sm"
+                onPress={() => setFilter("all")}
+              >
+                All Projects
+              </Button>
+              <Button
+                variant={filter === "featured" ? "primary" : "ghost"}
+                size="sm"
+                onPress={() => setFilter("featured")}
+              >
+                <HiSparkles className="w-4 h-4 mr-1" />
+                Featured
+              </Button>
+            </motion.div>
 
-        {/* Projects Bento Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {filteredProjects.map((project, index) => (
-            <ProjectCard
-              key={project.id}
-              project={project}
-              index={index}
-              featured={project.featured && index === 0}
-            />
-          ))}
-        </div>
+            {/* Projects Bento Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {filteredProjects.map((project, index) => (
+                <ProjectCard
+                  key={project.id}
+                  project={project}
+                  index={index}
+                  featured={project.featured === true && index === 0}
+                />
+              ))}
+            </div>
 
-        {/* View All Projects CTA */}
-        <motion.div
-          className="text-center mt-16"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.4, duration: 0.5 }}
-        >
-          <Button variant="secondary" size="lg" className="group">
-            View All Projects
-            <FaArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
-          </Button>
-        </motion.div>
+            {/* View All Projects CTA */}
+            <motion.div
+              className="text-center mt-16"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.4, duration: 0.5 }}
+            >
+              <Button variant="secondary" size="lg" className="group">
+                View All Projects
+                <FaArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </motion.div>
+          </>
+        ) : (
+          /* Empty State */
+          <motion.div
+            className="text-center py-16"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <Card variant="secondary" className="max-w-md mx-auto p-12">
+              <Card.Content className="space-y-4 p-0">
+                <HiPhotograph className="w-16 h-16 mx-auto text-muted" />
+                <h3 className="text-xl font-semibold">No Projects Yet</h3>
+                <p className="text-muted">
+                  Projects will appear here once added through the admin dashboard.
+                </p>
+              </Card.Content>
+            </Card>
+          </motion.div>
+        )}
       </div>
     </section>
   );

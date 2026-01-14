@@ -17,6 +17,9 @@ import {
   FaBars,
   FaTimes,
   FaUser,
+  FaAward,
+  FaUserCircle,
+  FaTags,
 } from "react-icons/fa";
 
 interface User {
@@ -26,9 +29,12 @@ interface User {
 
 const navItems = [
   { href: "/admin/dashboard", label: "Dashboard", icon: FaHome },
+  { href: "/admin/dashboard/profile", label: "Profile", icon: FaUserCircle },
   { href: "/admin/dashboard/skills", label: "Skills", icon: FaCode },
+  { href: "/admin/dashboard/categories", label: "Categories", icon: FaTags },
   { href: "/admin/dashboard/projects", label: "Projects", icon: FaBriefcase },
-  { href: "/admin/dashboard/experience", label: "Experience", icon: FaCertificate },
+  { href: "/admin/dashboard/experience", label: "Experience", icon: FaBriefcase },
+  { href: "/admin/dashboard/certifications", label: "Certifications", icon: FaAward },
   { href: "/admin/dashboard/blog", label: "Blog Posts", icon: FaBlog },
   { href: "/admin/dashboard/images", label: "Media", icon: FaImages },
   { href: "/admin/dashboard/settings", label: "Settings", icon: FaCog },
@@ -124,6 +130,7 @@ export default function AdminDashboardLayout({
             <button
               onClick={() => setSidebarOpen(false)}
               className="lg:hidden text-muted hover:text-foreground"
+              title="Close sidebar"
             >
               <FaTimes className="w-5 h-5" />
             </button>
@@ -205,6 +212,7 @@ export default function AdminDashboardLayout({
             <button
               onClick={() => setSidebarOpen(true)}
               className="lg:hidden p-2 text-muted hover:text-foreground"
+              title="Open sidebar"
             >
               <FaBars className="w-5 h-5" />
             </button>

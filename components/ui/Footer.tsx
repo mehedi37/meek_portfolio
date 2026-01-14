@@ -21,7 +21,7 @@ export function Footer({ className = "" }: FooterProps) {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const quickLinks = navItems.filter(item => 
+  const quickLinks = navItems.filter(item =>
     ["Skills", "Projects", "Experience", "Blog"].includes(item.name)
   );
 
@@ -29,14 +29,14 @@ export function Footer({ className = "" }: FooterProps) {
     <footer className={`relative overflow-hidden ${className}`}>
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-t from-[var(--surface-secondary)] to-transparent opacity-50" />
-      
+
       {/* Top border gradient */}
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[var(--color-accent)]/30 to-transparent" />
 
       {/* Content */}
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-16">
-          
+
           {/* Brand Section */}
           <div className="lg:col-span-2">
             <Link href="/" className="inline-flex items-center gap-3 group mb-6">
@@ -56,9 +56,9 @@ export function Footer({ className = "" }: FooterProps) {
                 </span>
               </div>
             </Link>
-            
+
             <p className="text-[var(--muted-foreground)] max-w-md mb-8 leading-relaxed">
-              Building modern, performant web applications with a focus on user 
+              Building modern, performant web applications with a focus on user
               experience and clean code. Let&apos;s create something amazing together.
             </p>
 
@@ -108,16 +108,11 @@ export function Footer({ className = "" }: FooterProps) {
             <ul className="space-y-3">
               <li>
                 <a
-                  href={`mailto:${siteConfig.email}`}
+                  href={`mailto:${siteConfig.links.email}`}
                   className="text-[var(--muted-foreground)] hover:text-[var(--color-accent)] transition-colors duration-300 text-sm"
                 >
-                  {siteConfig.email}
+                  {siteConfig.links.email}
                 </a>
-              </li>
-              <li>
-                <span className="text-[var(--muted-foreground)] text-sm">
-                  {siteConfig.location}
-                </span>
               </li>
               <li className="pt-4">
                 <button
@@ -140,9 +135,7 @@ export function Footer({ className = "" }: FooterProps) {
         <div className="mt-16 pt-8 border-t border-[var(--glass-border)]">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-sm text-[var(--muted-foreground)] flex items-center gap-1">
-              © {currentYear} {siteConfig.name}. Made with{" "}
-              <HiHeart className="w-4 h-4 text-red-500 animate-pulse" />{" "}
-              using Next.js
+              © {currentYear} {siteConfig.name}. All rights reserved.
             </p>
 
             {/* Scroll to top */}

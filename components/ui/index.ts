@@ -7,3 +7,5 @@ export { BlogCard } from "./BlogCard";
 export { SkillBar, SkillCircle } from "./SkillBar";
 export { TimelineItem } from "./TimelineItem";
 export { SocialLinks } from "./SocialLinks";
+export { YearTimeline } from "./YearTimeline";
+export { Pagination } from "./Pagination";

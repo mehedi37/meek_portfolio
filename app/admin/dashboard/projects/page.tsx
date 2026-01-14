@@ -18,33 +18,21 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { FaPlus, FaEdit, FaTrash, FaBriefcase, FaExternalLinkAlt, FaGithub } from "react-icons/fa";
 import { createClient } from "@/lib/supabase/client";
+import type { Project } from "@/lib/supabase/types";
 import Image from "next/image";
-
-interface Project {
-  id: string;
-  slug: string;
-  title: string;
-  description: string;
-  long_description: string | null;
-  image_url: string | null;
-  technologies: string[];
-  live_url: string | null;
-  github_url: string | null;
-  is_featured: boolean;
-  sort_order: number;
-  created_at: string;
-}
 
 const defaultProject: Partial<Project> = {
   title: "",
   slug: "",
   description: "",
   long_description: "",
-  image_url: "",
-  technologies: [],
+  image: "",
+  images: [],
+  tech_stack: [],
   live_url: "",
   github_url: "",
-  is_featured: false,
+  featured: false,
+  is_active: true,
   sort_order: 0,
 };
 
@@ -109,20 +97,20 @@ export default function ProjectsManagementPage() {
   const addTechnology = () => {
     if (!techInput.trim()) return;
     const tech = techInput.trim();
-    if (!editingProject?.technologies?.includes(tech)) {
-      setEditingProject((prev) => ({
+    if (!editingProject?.tech_stack?.includes(tech)) {
+      setEditingProject((prev) => prev ? ({
         ...prev,
-        technologies: [...(prev?.technologies || []), tech],
-      }));
+        tech_stack: [...(prev.tech_stack || []), tech],
+      }) : prev);
     }
     setTechInput("");
   };
 
   const removeTechnology = (tech: string) => {
-    setEditingProject((prev) => ({
+    setEditingProject((prev) => prev ? ({
       ...prev,
-      technologies: prev?.technologies?.filter((t) => t !== tech) || [],
-    }));
+      tech_stack: prev.tech_stack?.filter((t) => t !== tech) || [],
+    }) : prev);
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -144,11 +132,13 @@ export default function ProjectsManagementPage() {
             slug: slug,
             description: editingProject.description,
             long_description: editingProject.long_description || null,
-            image_url: editingProject.image_url || null,
-            technologies: editingProject.technologies || [],
+            image: editingProject.image || null,
+            images: editingProject.images || [],
+            tech_stack: editingProject.tech_stack || [],
             live_url: editingProject.live_url || null,
             github_url: editingProject.github_url || null,
-            is_featured: editingProject.is_featured,
+            featured: editingProject.featured,
+            is_active: editingProject.is_active,
             sort_order: editingProject.sort_order,
           })
           .eq("id", editingProject.id);
@@ -161,11 +151,13 @@ export default function ProjectsManagementPage() {
           slug: slug,
           description: editingProject.description,
           long_description: editingProject.long_description || null,
-          image_url: editingProject.image_url || null,
-          technologies: editingProject.technologies || [],
+          image: editingProject.image || null,
+          images: editingProject.images || [],
+          tech_stack: editingProject.tech_stack || [],
           live_url: editingProject.live_url || null,
           github_url: editingProject.github_url || null,
-          is_featured: editingProject.is_featured || false,
+          featured: editingProject.featured || false,
+          is_active: editingProject.is_active !== false,
           sort_order: editingProject.sort_order || 0,
         });
 
@@ -247,9 +239,9 @@ export default function ProjectsManagementPage() {
                 <Card className="overflow-hidden">
                   {/* Image */}
                   <div className="relative h-48 bg-muted/20">
-                    {project.image_url ? (
+                    {project.image ? (
                       <Image
-                        src={project.image_url}
+                        src={project.image}
                         alt={project.title}
                         fill
                         className="object-cover"
@@ -259,11 +251,18 @@ export default function ProjectsManagementPage() {
                         <FaBriefcase className="w-12 h-12 text-muted" />
                       </div>
                     )}
-                    {project.is_featured && (
-                      <span className="absolute top-3 left-3 px-2 py-1 text-xs bg-accent text-white rounded-full">
-                        Featured
-                      </span>
-                    )}
+                    <div className="absolute top-3 left-3 flex gap-2">
+                      {project.featured && (
+                        <span className="px-2 py-1 text-xs bg-accent text-white rounded-full">
+                          Featured
+                        </span>
+                      )}
+                      {!project.is_active && (
+                        <span className="px-2 py-1 text-xs bg-muted text-white rounded-full">
+                          Inactive
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {/* Content */}
@@ -277,6 +276,7 @@ export default function ProjectsManagementPage() {
                             target="_blank"
                             rel="noopener noreferrer"
                             className="p-2 text-muted hover:text-foreground hover:bg-surface-secondary rounded-lg transition-colors"
+                            title="View live project"
                           >
                             <FaExternalLinkAlt className="w-3 h-3" />
                           </a>
@@ -287,6 +287,7 @@ export default function ProjectsManagementPage() {
                             target="_blank"
                             rel="noopener noreferrer"
                             className="p-2 text-muted hover:text-foreground hover:bg-surface-secondary rounded-lg transition-colors"
+                            title="View on GitHub"
                           >
                             <FaGithub className="w-3 h-3" />
                           </a>
@@ -299,7 +300,7 @@ export default function ProjectsManagementPage() {
 
                     {/* Technologies */}
                     <div className="flex flex-wrap gap-1 mb-4">
-                      {project.technologies?.slice(0, 4).map((tech) => (
+                      {project.tech_stack?.slice(0, 4).map((tech) => (
                         <span
                           key={tech}
                           className="px-2 py-0.5 text-xs bg-surface-secondary rounded-full"
@@ -307,9 +308,9 @@ export default function ProjectsManagementPage() {
                           {tech}
                         </span>
                       ))}
-                      {project.technologies?.length > 4 && (
+                      {(project.tech_stack?.length || 0) > 4 && (
                         <span className="px-2 py-0.5 text-xs text-muted">
-                          +{project.technologies.length - 4} more
+                          +{(project.tech_stack?.length || 0) - 4} more
                         </span>
                       )}
                     </div>
@@ -363,7 +364,7 @@ export default function ProjectsManagementPage() {
             <Form onSubmit={handleSubmit}>
               <Modal.Body className="space-y-4">
                 {error && (
-                  <div className="p-3 rounded-lg bg-danger/10 border border-danger/20">
+                  <div className="p-3 rounded-lg bg-danger/10 border-danger-soft-hover">
                     <p className="text-sm text-danger">{error}</p>
                   </div>
                 )}
@@ -373,11 +374,11 @@ export default function ProjectsManagementPage() {
                   isRequired
                   value={editingProject?.title || ""}
                   onChange={(value) =>
-                    setEditingProject((prev) => ({
+                    setEditingProject((prev) => prev ? ({
                       ...prev,
                       title: value,
-                      slug: prev?.slug || generateSlug(value),
-                    }))
+                      slug: prev.slug || generateSlug(value),
+                    }) : prev)
                   }
                 >
                   <Label>Project Title</Label>
@@ -390,7 +391,7 @@ export default function ProjectsManagementPage() {
                   isRequired
                   value={editingProject?.slug || ""}
                   onChange={(value) =>
-                    setEditingProject((prev) => ({ ...prev, slug: value }))
+                    setEditingProject((prev) => prev ? ({ ...prev, slug: value }) : prev)
                   }
                 >
                   <Label>URL Slug</Label>
@@ -404,7 +405,7 @@ export default function ProjectsManagementPage() {
                   isRequired
                   value={editingProject?.description || ""}
                   onChange={(value) =>
-                    setEditingProject((prev) => ({ ...prev, description: value }))
+                    setEditingProject((prev) => prev ? ({ ...prev, description: value }) : prev)
                   }
                 >
                   <Label>Short Description</Label>
@@ -416,7 +417,7 @@ export default function ProjectsManagementPage() {
                   name="long_description"
                   value={editingProject?.long_description || ""}
                   onChange={(value) =>
-                    setEditingProject((prev) => ({ ...prev, long_description: value }))
+                    setEditingProject((prev) => prev ? ({ ...prev, long_description: value }) : prev)
                   }
                 >
                   <Label>Full Description (optional)</Label>
@@ -424,10 +425,10 @@ export default function ProjectsManagementPage() {
                 </TextField>
 
                 <TextField
-                  name="image_url"
-                  value={editingProject?.image_url || ""}
+                  name="image"
+                  value={editingProject?.image || ""}
                   onChange={(value) =>
-                    setEditingProject((prev) => ({ ...prev, image_url: value }))
+                    setEditingProject((prev) => prev ? ({ ...prev, image: value }) : prev)
                   }
                 >
                   <Label>Image URL</Label>
@@ -456,7 +457,7 @@ export default function ProjectsManagementPage() {
                     </Button>
                   </div>
                   <div className="flex flex-wrap gap-2 mt-2">
-                    {editingProject?.technologies?.map((tech) => (
+                    {editingProject?.tech_stack?.map((tech) => (
                       <span
                         key={tech}
                         className="inline-flex items-center gap-1 px-2 py-1 bg-surface-secondary rounded-full text-sm"
@@ -466,6 +467,7 @@ export default function ProjectsManagementPage() {
                           type="button"
                           onClick={() => removeTechnology(tech)}
                           className="ml-1 text-muted hover:text-danger"
+                          title="Remove technology"
                         >
                           ×
                         </button>
@@ -479,7 +481,7 @@ export default function ProjectsManagementPage() {
                     name="live_url"
                     value={editingProject?.live_url || ""}
                     onChange={(value) =>
-                      setEditingProject((prev) => ({ ...prev, live_url: value }))
+                      setEditingProject((prev) => prev ? ({ ...prev, live_url: value }) : prev)
                     }
                   >
                     <Label>Live URL (optional)</Label>
@@ -490,7 +492,7 @@ export default function ProjectsManagementPage() {
                     name="github_url"
                     value={editingProject?.github_url || ""}
                     onChange={(value) =>
-                      setEditingProject((prev) => ({ ...prev, github_url: value }))
+                      setEditingProject((prev) => prev ? ({ ...prev, github_url: value }) : prev)
                     }
                   >
                     <Label>GitHub URL (optional)</Label>
@@ -503,27 +505,41 @@ export default function ProjectsManagementPage() {
                   type="number"
                   value={String(editingProject?.sort_order || 0)}
                   onChange={(value) =>
-                    setEditingProject((prev) => ({
+                    setEditingProject((prev) => prev ? ({
                       ...prev,
                       sort_order: parseInt(value) || 0,
-                    }))
+                    }) : prev)
                   }
                 >
                   <Label>Sort Order</Label>
                   <Input placeholder="0" />
                 </TextField>
 
-                <Checkbox
-                  isSelected={editingProject?.is_featured || false}
-                  onChange={(checked) =>
-                    setEditingProject((prev) => ({ ...prev, is_featured: checked }))
-                  }
-                >
-                  <Checkbox.Control>
-                    <Checkbox.Indicator />
-                  </Checkbox.Control>
-                  <Label>Featured Project</Label>
-                </Checkbox>
+                <div className="flex gap-4">
+                  <Checkbox
+                    isSelected={editingProject?.featured || false}
+                    onChange={(checked) =>
+                      setEditingProject((prev) => prev ? ({ ...prev, featured: checked }) : prev)
+                    }
+                  >
+                    <Checkbox.Control>
+                      <Checkbox.Indicator />
+                    </Checkbox.Control>
+                    <Label>Featured Project</Label>
+                  </Checkbox>
+
+                  <Checkbox
+                    isSelected={editingProject?.is_active !== false}
+                    onChange={(checked) =>
+                      setEditingProject((prev) => prev ? ({ ...prev, is_active: checked }) : prev)
+                    }
+                  >
+                    <Checkbox.Control>
+                      <Checkbox.Indicator />
+                    </Checkbox.Control>
+                    <Label>Active</Label>
+                  </Checkbox>
+                </div>
               </Modal.Body>
               <Modal.Footer>
                 <Button variant="secondary" slot="close">

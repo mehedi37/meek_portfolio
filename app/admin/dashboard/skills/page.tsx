@@ -20,34 +20,14 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { FaPlus, FaEdit, FaTrash, FaCode } from "react-icons/fa";
 import { createClient } from "@/lib/supabase/client";
-
-interface Skill {
-  id: string;
-  name: string;
-  category: string;
-  proficiency: number;
-  icon: string | null;
-  color: string | null;
-  is_featured: boolean;
-  sort_order: number;
-  created_at: string;
-}
-
-const categories = [
-  "Frontend",
-  "Backend",
-  "Database",
-  "DevOps",
-  "Mobile",
-  "Tools",
-  "Languages",
-  "Other",
-];
+import { IconSearch, IconRenderer } from "@/components/admin/IconSearch";
+import { ColorSelect } from "@/components/admin/ColorSelect";
+import type { Skill, SkillCategory } from "@/lib/supabase/types";
 
 const defaultSkill: Partial<Skill> = {
   name: "",
-  category: "Frontend",
-  proficiency: 80,
+  category_id: "",
+  level: 80,
   icon: "",
   color: "",
   is_featured: false,
@@ -56,6 +36,7 @@ const defaultSkill: Partial<Skill> = {
 
 export default function SkillsManagementPage() {
   const [skills, setSkills] = useState<Skill[]>([]);
+  const [categories, setCategories] = useState<SkillCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSkill, setEditingSkill] = useState<Partial<Skill> | null>(null);
@@ -66,27 +47,31 @@ export default function SkillsManagementPage() {
   const supabase = createClient();
 
   useEffect(() => {
-    fetchSkills();
+    fetchData();
   }, []);
 
-  const fetchSkills = async () => {
+  const fetchData = async () => {
     try {
-      const { data, error } = await supabase
-        .from("skills")
-        .select("*")
-        .order("sort_order", { ascending: true });
+      // Fetch skills and categories in parallel
+      const [skillsRes, categoriesRes] = await Promise.all([
+        supabase.from("skills").select("*").order("sort_order", { ascending: true }),
+        supabase.from("skill_categories").select("*").order("sort_order", { ascending: true }),
+      ]);
 
-      if (error) throw error;
-      setSkills(data || []);
+      if (skillsRes.error) throw skillsRes.error;
+      if (categoriesRes.error) throw categoriesRes.error;
+
+      setSkills(skillsRes.data || []);
+      setCategories(categoriesRes.data || []);
     } catch (error) {
-      console.error("Error fetching skills:", error);
+      console.error("Error fetching data:", error);
     } finally {
       setLoading(false);
     }
   };
 
   const openModal = (skill?: Skill) => {
-    setEditingSkill(skill || { ...defaultSkill });
+    setEditingSkill(skill || { ...defaultSkill, category_id: categories[0]?.id || "" });
     setIsModalOpen(true);
     setError("");
   };
@@ -111,8 +96,8 @@ export default function SkillsManagementPage() {
           .from("skills")
           .update({
             name: editingSkill.name,
-            category: editingSkill.category,
-            proficiency: editingSkill.proficiency,
+            category_id: editingSkill.category_id || null,
+            level: editingSkill.level,
             icon: editingSkill.icon || null,
             color: editingSkill.color || null,
             is_featured: editingSkill.is_featured,
@@ -122,11 +107,12 @@ export default function SkillsManagementPage() {
 
         if (error) throw error;
       } else {
+        console.log("Creating skill:", editingSkill.category_id);
         // Create
         const { error } = await supabase.from("skills").insert({
           name: editingSkill.name,
-          category: editingSkill.category,
-          proficiency: editingSkill.proficiency,
+          category_id: editingSkill.category_id || null,
+          level: editingSkill.level || 80,
           icon: editingSkill.icon || null,
           color: editingSkill.color || null,
           is_featured: editingSkill.is_featured || false,
@@ -136,7 +122,7 @@ export default function SkillsManagementPage() {
         if (error) throw error;
       }
 
-      await fetchSkills();
+      await fetchData();
       closeModal();
     } catch (error: unknown) {
       console.error("Error saving skill:", error);
@@ -153,7 +139,7 @@ export default function SkillsManagementPage() {
     try {
       const { error } = await supabase.from("skills").delete().eq("id", id);
       if (error) throw error;
-      await fetchSkills();
+      await fetchData();
     } catch (error) {
       console.error("Error deleting skill:", error);
       alert("Failed to delete skill");
@@ -162,16 +148,25 @@ export default function SkillsManagementPage() {
     }
   };
 
+  // Group skills by category_id
   const groupedSkills = skills.reduce(
     (acc, skill) => {
-      if (!acc[skill.category]) {
-        acc[skill.category] = [];
+      const categoryId = skill.category_id || "uncategorized";
+      if (!acc[categoryId]) {
+        acc[categoryId] = [];
       }
-      acc[skill.category].push(skill);
+      acc[categoryId].push(skill);
       return acc;
     },
     {} as Record<string, Skill[]>
   );
+
+  // Get category name by id
+  const getCategoryName = (categoryId: string | null) => {
+    if (!categoryId || categoryId === "uncategorized") return "Uncategorized";
+    const category = categories.find(c => c.id === categoryId);
+    return category?.name || "Unknown";
+  };
 
   return (
     <div className="space-y-6">
@@ -183,11 +178,23 @@ export default function SkillsManagementPage() {
             Manage your technical skills and proficiency levels.
           </p>
         </div>
-        <Button onPress={() => openModal()}>
+        <Button onPress={() => openModal()} isDisabled={categories.length === 0}>
           <FaPlus className="w-4 h-4" />
           Add Skill
         </Button>
       </div>
+
+      {/* Warning if no categories */}
+      {!loading && categories.length === 0 && (
+        <Card className="p-4 bg-warning/10 border-warning-soft-hover">
+          <p className="text-sm text-warning">
+            Please create skill categories first before adding skills.{" "}
+            <a href="/admin/dashboard/categories" className="underline font-medium">
+              Go to Categories →
+            </a>
+          </p>
+        </Card>
+      )}
 
       {/* Skills List */}
       {loading ? (
@@ -203,16 +210,16 @@ export default function SkillsManagementPage() {
           <p className="text-muted mb-4">
             Add your first skill to get started.
           </p>
-          <Button onPress={() => openModal()}>
+          <Button onPress={() => openModal()} isDisabled={categories.length === 0}>
             <FaPlus className="w-4 h-4" />
             Add Skill
           </Button>
         </Card>
       ) : (
         <div className="space-y-6">
-          {Object.entries(groupedSkills).map(([category, categorySkills]) => (
-            <div key={category}>
-              <h2 className="text-lg font-semibold mb-3">{category}</h2>
+          {Object.entries(groupedSkills).map(([categoryId, categorySkills]) => (
+            <div key={categoryId}>
+              <h2 className="text-lg font-semibold mb-3">{getCategoryName(categoryId)}</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <AnimatePresence mode="popLayout">
                   {categorySkills.map((skill) => (
@@ -225,32 +232,40 @@ export default function SkillsManagementPage() {
                     >
                       <Card className="p-4">
                         <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <h3 className="font-medium truncate">
-                                {skill.name}
-                              </h3>
-                              {skill.is_featured && (
-                                <span className="px-2 py-0.5 text-xs bg-accent/10 text-accent rounded-full">
-                                  Featured
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-sm text-muted mt-1">
-                              {skill.proficiency}% proficiency
-                            </p>
-                            {/* Progress bar */}
-                            <div className="mt-2 h-2 bg-muted/20 rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-accent rounded-full transition-all"
-                                style={{ width: `${skill.proficiency}%` }}
-                              />
+                          <div className="flex items-start gap-3 flex-1 min-w-0">
+                            {skill.icon && (
+                              <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
+                                <IconRenderer name={skill.icon} className="w-5 h-5 text-accent" />
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <h3 className="font-medium truncate">
+                                  {skill.name}
+                                </h3>
+                                {skill.is_featured && (
+                                  <span className="px-2 py-0.5 text-xs bg-accent/10 text-accent rounded-full">
+                                    Featured
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-sm text-muted mt-1">
+                                {skill.level}% proficiency
+                              </p>
+                              {/* Progress bar */}
+                              <div className="mt-2 h-2 bg-muted/20 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-accent rounded-full transition-all"
+                                  style={{ width: `${skill.level}%` }}
+                                />
+                              </div>
                             </div>
                           </div>
                           <div className="flex gap-1">
                             <button
                               onClick={() => openModal(skill)}
                               className="p-2 text-muted hover:text-foreground hover:bg-surface-secondary rounded-lg transition-colors"
+                              title="Edit skill"
                             >
                               <FaEdit className="w-4 h-4" />
                             </button>
@@ -258,6 +273,7 @@ export default function SkillsManagementPage() {
                               onClick={() => handleDelete(skill.id)}
                               disabled={deleting === skill.id}
                               className="p-2 text-muted hover:text-danger hover:bg-danger/10 rounded-lg transition-colors disabled:opacity-50"
+                              title="Delete skill"
                             >
                               {deleting === skill.id ? (
                                 <Spinner size="sm" />
@@ -280,7 +296,7 @@ export default function SkillsManagementPage() {
       {/* Add/Edit Modal */}
       <Modal.Backdrop isOpen={isModalOpen} onOpenChange={setIsModalOpen}>
         <Modal.Container>
-          <Modal.Dialog className="sm:max-w-md">
+          <Modal.Dialog className="sm:max-w-md max-h-[90vh] overflow-y-auto">
             <Modal.CloseTrigger />
             <Modal.Header>
               <Modal.Heading>
@@ -290,7 +306,7 @@ export default function SkillsManagementPage() {
             <Form onSubmit={handleSubmit}>
               <Modal.Body className="space-y-4">
                 {error && (
-                  <div className="p-3 rounded-lg bg-danger/10 border border-danger/20">
+                  <div className="p-3 rounded-lg bg-danger/10 border-danger-soft-hover">
                     <p className="text-sm text-danger">{error}</p>
                   </div>
                 )}
@@ -310,12 +326,12 @@ export default function SkillsManagementPage() {
 
                 <div>
                   <Select
-                    name="category"
-                    defaultSelectedKey={editingSkill?.category || "Frontend"}
+                    name="category_id"
+                    selectedKey={editingSkill?.category_id || ""}
                     onSelectionChange={(key) =>
                       setEditingSkill((prev) => ({
                         ...prev,
-                        category: String(key),
+                        category_id: String(key),
                       }))
                     }
                   >
@@ -327,8 +343,8 @@ export default function SkillsManagementPage() {
                     <Select.Popover>
                       <ListBox>
                         {categories.map((cat) => (
-                          <ListBox.Item key={cat} id={cat} textValue={cat}>
-                            {cat}
+                          <ListBox.Item key={cat.id} id={cat.id} textValue={cat.name}>
+                            {cat.name}
                             <ListBox.ItemIndicator />
                           </ListBox.Item>
                         ))}
@@ -338,45 +354,44 @@ export default function SkillsManagementPage() {
                 </div>
 
                 <TextField
-                  name="proficiency"
+                  name="level"
                   type="number"
                   isRequired
-                  value={String(editingSkill?.proficiency || 80)}
+                  value={String(editingSkill?.level || 80)}
                   onChange={(value) =>
                     setEditingSkill((prev) => ({
                       ...prev,
-                      proficiency: Math.min(100, Math.max(0, parseInt(value) || 0)),
+                      level: Math.min(100, Math.max(0, parseInt(value) || 0)),
                     }))
                   }
                 >
-                  <Label>Proficiency (%)</Label>
+                  <Label>Proficiency Level (%)</Label>
                   <Input placeholder="0-100" />
                   <Description>Enter a value between 0 and 100</Description>
                   <FieldError />
                 </TextField>
 
-                <TextField
-                  name="icon"
-                  value={editingSkill?.icon || ""}
-                  onChange={(value) =>
-                    setEditingSkill((prev) => ({ ...prev, icon: value }))
-                  }
-                >
-                  <Label>Icon (optional)</Label>
-                  <Input placeholder="e.g., react, python, docker" />
-                  <Description>Icon identifier for display</Description>
-                </TextField>
+                <div>
+                  <Label className="mb-2 block">Icon</Label>
+                  <IconSearch
+                    value={editingSkill?.icon || ""}
+                    onChange={(value) =>
+                      setEditingSkill((prev) => ({ ...prev, icon: value }))
+                    }
+                  />
+                  <Description className="mt-1">Search and select an icon for this skill</Description>
+                </div>
 
-                <TextField
-                  name="color"
-                  value={editingSkill?.color || ""}
-                  onChange={(value) =>
-                    setEditingSkill((prev) => ({ ...prev, color: value }))
-                  }
-                >
-                  <Label>Color (optional)</Label>
-                  <Input placeholder="e.g., #61DAFB or blue" />
-                </TextField>
+                <div>
+                  <ColorSelect
+                    value={editingSkill?.color || ""}
+                    onChange={(value) =>
+                      setEditingSkill((prev) => ({ ...prev, color: value }))
+                    }
+                    label="Color (optional)"
+                    description="Select a color for this skill"
+                  />
+                </div>
 
                 <TextField
                   name="sort_order"

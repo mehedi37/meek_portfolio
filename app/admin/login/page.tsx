@@ -11,6 +11,7 @@ import {
   TextField,
   FieldError,
   Spinner,
+  InputGroup,
 } from "@heroui/react";
 import { FaLock, FaUser, FaEye, FaEyeSlash } from "react-icons/fa";
 import { motion } from "framer-motion";
@@ -54,7 +55,7 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-surface to-surface-secondary px-4">
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-background via-surface to-surface-secondary px-4">
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-accent/10 rounded-full blur-3xl" />
@@ -91,7 +92,7 @@ export default function AdminLoginPage() {
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="p-3 rounded-lg bg-danger/10 border border-danger/20"
+                  className="p-3 rounded-lg bg-danger/10 border border-danger-soft-hover"
                 >
                   <p className="text-sm text-danger text-center">{error}</p>
                 </motion.div>
@@ -105,14 +106,16 @@ export default function AdminLoginPage() {
                 onChange={setUsername}
                 className="w-full"
               >
-                <Label>
-                  <FaUser className="w-3 h-3 text-muted" />
-                  Username
-                </Label>
-                <Input
-                  placeholder="Enter your username"
-                  autoComplete="username"
-                />
+                {/* <Label>Username</Label> */}
+                <InputGroup>
+                  <InputGroup.Prefix>
+                    <FaUser className="w-3 h-3 text-muted" />
+                  </InputGroup.Prefix>
+                  <InputGroup.Input
+                    placeholder="Enter your username"
+                    autoComplete="username"
+                  />
+                </InputGroup>
                 <FieldError />
               </TextField>
 
@@ -125,29 +128,29 @@ export default function AdminLoginPage() {
                 onChange={setPassword}
                 className="w-full"
               >
-                <Label className="flex items-center gap-2 mb-1">
+                {/* <Label className="flex items-center gap-2 mb-1">
                   <FaLock className="w-3 h-3 text-muted" />
                   Password
-                </Label>
-                <div className="relative">
-                  <Input
+                </Label> */}
+                <InputGroup>
+                  <InputGroup.Prefix>
+                    <FaLock className="w-3 h-3 text-muted" />
+                  </InputGroup.Prefix>
+                  <InputGroup.Input
                     placeholder="Enter your password"
                     autoComplete="current-password"
-                    className="pr-10"
                   />
-                  <button
-                    type="button"
+                  <InputGroup.Suffix
+                    className="cursor-pointer"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground transition-colors"
-                    tabIndex={-1}
                   >
                     {showPassword ? (
-                      <FaEyeSlash className="w-4 h-4" />
+                      <FaEyeSlash className="w-4 h-4 text-muted" />
                     ) : (
-                      <FaEye className="w-4 h-4" />
+                      <FaEye className="w-4 h-4 text-muted" />
                     )}
-                  </button>
-                </div>
+                  </InputGroup.Suffix>
+                </InputGroup>
                 <FieldError />
               </TextField>
             </Card.Content>

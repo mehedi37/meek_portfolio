@@ -62,7 +62,7 @@ export function ThemeToggle({ className = "" }: ThemeToggleProps) {
       <motion.div
         initial={false}
         animate={{
-          rotate: theme === "light" ? 0 : 180,
+          rotate: theme === "light" ? 0 : 360,
           scale: 1,
         }}
         transition={{ type: "spring", stiffness: 200, damping: 10 }}
