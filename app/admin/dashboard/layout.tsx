@@ -20,6 +20,7 @@ import {
   FaAward,
   FaUserCircle,
   FaTags,
+  FaEnvelope,
 } from "react-icons/fa";
 
 interface User {
@@ -37,6 +38,7 @@ const navItems = [
   { href: "/admin/dashboard/certifications", label: "Certifications", icon: FaAward },
   { href: "/admin/dashboard/blog", label: "Blog Posts", icon: FaBlog },
   { href: "/admin/dashboard/images", label: "Media", icon: FaImages },
+  { href: "/admin/dashboard/contacts", label: "Messages", icon: FaEnvelope },
   { href: "/admin/dashboard/settings", label: "Settings", icon: FaCog },
 ];
 

@@ -43,14 +43,11 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [contacts, setContacts] = useState<unknown[]>([]);
-  const [loadingContacts, setLoadingContacts] = useState(true);
 
   const supabase = createClient();
 
   useEffect(() => {
     loadSettings();
-    loadContacts();
   }, []);
 
   const loadSettings = () => {
@@ -63,23 +60,6 @@ export default function SettingsPage() {
       console.error("Error loading settings:", error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const loadContacts = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("contacts")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(10);
-
-      if (error) throw error;
-      setContacts(data || []);
-    } catch (error) {
-      console.error("Error loading contacts:", error);
-    } finally {
-      setLoadingContacts(false);
     }
   };
 
@@ -256,68 +236,6 @@ export default function SettingsPage() {
           )}
         </Button>
       </div>
-
-      {/* Contact Messages */}
-      <Card className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center">
-              <FaEnvelope className="w-5 h-5 text-accent" />
-            </div>
-            <div>
-              <h2 className="font-semibold">Recent Messages</h2>
-              <p className="text-sm text-muted">Contact form submissions</p>
-            </div>
-          </div>
-          <Button variant="secondary" size="sm" onPress={loadContacts}>
-            Refresh
-          </Button>
-        </div>
-
-        {loadingContacts ? (
-          <div className="flex justify-center py-8">
-            <Spinner />
-          </div>
-        ) : contacts.length === 0 ? (
-          <div className="text-center py-8 text-muted">
-            <FaEnvelope className="w-8 h-8 mx-auto mb-2 opacity-50" />
-            <p>No messages yet</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {contacts.map((contact: unknown) => {
-              const c = contact as {
-                id: string;
-                name: string;
-                email: string;
-                message: string;
-                created_at: string;
-              };
-              return (
-                <div
-                  key={c.id}
-                  className="p-4 bg-surface-secondary rounded-lg"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-medium">{c.name}</span>
-                        <span className="text-muted text-sm">{c.email}</span>
-                      </div>
-                      <p className="text-sm text-muted mt-1 line-clamp-2">
-                        {c.message}
-                      </p>
-                    </div>
-                    <span className="text-xs text-muted whitespace-nowrap">
-                      {new Date(c.created_at).toLocaleDateString()}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </Card>
     </div>
   );
 }
