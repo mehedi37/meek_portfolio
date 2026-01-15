@@ -18,7 +18,7 @@ export const navItems: NavItem[] = [
   { name: "Experience", href: "#experience" },
   { name: "Certifications", href: "#certifications" },
   { name: "Blog", href: "#blog" },
-  { name: "Contact", href: "#contact" },
+  // { name: "Contact", href: "#contact" },
 ];
 
 // Animation timing constants
