@@ -1,46 +1,91 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
-import { Button, Card, Spinner } from "@heroui/react";
+import { useState, useRef, useCallback, useEffect } from "react";
+import { Button, Card, Spinner, Input, Tabs } from "@heroui/react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaUpload, FaTrash, FaCopy, FaCheck, FaImages, FaCloudUploadAlt } from "react-icons/fa";
+import { FaUpload, FaTrash, FaCopy, FaCheck, FaImages, FaCloudUploadAlt, FaVideo, FaImage, FaPlay } from "react-icons/fa";
 import Image from "next/image";
 
-interface UploadedImage {
-  id: string;
-  url: string;
-  publicId: string;
+interface CloudinaryResource {
+  asset_id: string;
+  public_id: string;
+  secure_url: string;
   width: number;
   height: number;
   format: string;
-  uploadedAt: string;
+  resource_type: "image" | "video";
+  created_at: string;
 }
 
-const STORAGE_KEY = "admin_uploaded_images";
-
 export default function MediaManagementPage() {
-  const [images, setImages] = useState<UploadedImage[]>(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      return stored ? JSON.parse(stored) : [];
-    }
-    return [];
-  });
+  const [resources, setResources] = useState<CloudinaryResource[]>([]);
+  const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
+  const [activeTab, setActiveTab] = useState<"all" | "images" | "videos">("all");
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
   const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
-  const saveImages = (newImages: UploadedImage[]) => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newImages));
-    setImages(newImages);
-  };
+  // Fetch resources from Cloudinary
+  const fetchResources = useCallback(async (resourceType: "image" | "video" | "all" = "all", cursor?: string) => {
+    try {
+      setLoading(true);
 
-  const handleUpload = async (files: FileList | null) => {
+      if (resourceType === "all") {
+        // Fetch both images and videos
+        const [imagesRes, videosRes] = await Promise.all([
+          fetch(`/api/cloudinary/resources?resource_type=image${cursor ? `&next_cursor=${cursor}` : ""}`).then(r => r.json()),
+          fetch(`/api/cloudinary/resources?resource_type=video${cursor ? `&next_cursor=${cursor}` : ""}`).then(r => r.json()),
+        ]);
+
+        const allResources = [
+          ...(imagesRes.resources || []),
+          ...(videosRes.resources || []),
+        ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+        if (cursor) {
+          setResources(prev => [...prev, ...allResources]);
+        } else {
+          setResources(allResources);
+        }
+
+        setHasMore(!!(imagesRes.next_cursor || videosRes.next_cursor));
+        setNextCursor(imagesRes.next_cursor || videosRes.next_cursor);
+      } else {
+        const response = await fetch(
+          `/api/cloudinary/resources?resource_type=${resourceType}${cursor ? `&next_cursor=${cursor}` : ""}`
+        );
+        const data = await response.json();
+
+        if (cursor) {
+          setResources(prev => [...prev, ...(data.resources || [])]);
+        } else {
+          setResources(data.resources || []);
+        }
+
+        setHasMore(!!data.next_cursor);
+        setNextCursor(data.next_cursor);
+      }
+    } catch (error) {
+      console.error("Error fetching resources:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Load resources on mount and tab change
+  useEffect(() => {
+    const resourceType = activeTab === "all" ? "all" : activeTab === "images" ? "image" : "video";
+    fetchResources(resourceType as any);
+  }, [activeTab, fetchResources]);
+
+  const handleUpload = async (files: FileList | null, resourceType: "image" | "video" = "image") => {
     if (!files || files.length === 0) return;
     if (!cloudName || !uploadPreset) {
       alert("Cloudinary is not configured. Please set environment variables.");
@@ -56,8 +101,9 @@ export default function MediaManagementPage() {
         formData.append("upload_preset", uploadPreset);
         formData.append("folder", "meek_portfolio");
 
+        const endpoint = resourceType === "video" ? "video" : "image";
         const response = await fetch(
-          `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+          `https://api.cloudinary.com/v1_1/${cloudName}/${endpoint}/upload`,
           {
             method: "POST",
             body: formData,
@@ -68,40 +114,44 @@ export default function MediaManagementPage() {
           throw new Error("Upload failed");
         }
 
-        const data = await response.json();
-
-        return {
-          id: data.public_id,
-          url: data.secure_url,
-          publicId: data.public_id,
-          width: data.width,
-          height: data.height,
-          format: data.format,
-          uploadedAt: new Date().toISOString(),
-        } as UploadedImage;
+        return response.json();
       });
 
-      const uploadedImages = await Promise.all(uploadPromises);
-      saveImages([...uploadedImages, ...images]);
+      await Promise.all(uploadPromises);
+
+      // Refresh the list
+      const resourceType = activeTab === "all" ? "all" : activeTab === "images" ? "image" : "video";
+      fetchResources(resourceType as any);
     } catch (error) {
       console.error("Upload error:", error);
-      alert("Failed to upload image(s)");
+      alert("Failed to upload file(s)");
     } finally {
       setUploading(false);
     }
   };
 
-  const handleDelete = async (image: UploadedImage) => {
-    if (!confirm("Are you sure you want to remove this image from the list?")) return;
+  const handleDelete = async (resource: CloudinaryResource) => {
+    if (!confirm(`Are you sure you want to delete this ${resource.resource_type}?`)) return;
 
-    setDeleting(image.id);
+    setDeleting(resource.asset_id);
     try {
-      // Note: This only removes from local storage
-      // To delete from Cloudinary, you'd need a server-side API route
-      const updated = images.filter((img) => img.id !== image.id);
-      saveImages(updated);
+      const response = await fetch("/api/cloudinary/resources", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          publicId: resource.public_id,
+          resourceType: resource.resource_type,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Delete failed");
+      }
+
+      setResources(prev => prev.filter(r => r.asset_id !== resource.asset_id));
     } catch (error) {
-      console.error("Error removing image:", error);
+      console.error("Error deleting resource:", error);
+      alert("Failed to delete resource");
     } finally {
       setDeleting(null);
     }
@@ -129,9 +179,18 @@ export default function MediaManagementPage() {
     setDragActive(false);
 
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      handleUpload(e.dataTransfer.files);
+      const files = e.dataTransfer.files;
+      const isVideo = files[0].type.startsWith("video/");
+      handleUpload(files, isVideo ? "video" : "image");
     }
   }, []);
+
+  const filteredResources = resources.filter(resource => {
+    if (activeTab === "all") return true;
+    if (activeTab === "images") return resource.resource_type === "image";
+    if (activeTab === "videos") return resource.resource_type === "video";
+    return true;
+  });
 
   return (
     <div className="space-y-6">
@@ -140,32 +199,40 @@ export default function MediaManagementPage() {
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold">Media Library</h1>
           <p className="text-muted mt-1">
-            Upload and manage your images and media files.
+            Upload and manage images and videos from Cloudinary.
           </p>
         </div>
-        <Button
-          onPress={() => fileInputRef.current?.click()}
-          isPending={uploading}
-        >
-          {({ isPending }) => (
-            <>
-              {isPending ? (
-                <Spinner color="current" size="sm" />
-              ) : (
-                <FaUpload className="w-4 h-4" />
-              )}
-              {isPending ? "Uploading..." : "Upload Image"}
-            </>
-          )}
-        </Button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          multiple
-          className="hidden"
-          onChange={(e) => handleUpload(e.target.files)}
-        />
+        <div className="flex gap-2">
+          <Button
+            onPress={() => {
+              const input = document.createElement("input");
+              input.type = "file";
+              input.accept = "image/*";
+              input.multiple = true;
+              input.onchange = (e) => handleUpload((e.target as HTMLInputElement).files, "image");
+              input.click();
+            }}
+            isPending={uploading}
+          >
+            <FaImage className="w-4 h-4" />
+            Upload Image
+          </Button>
+          <Button
+            onPress={() => {
+              const input = document.createElement("input");
+              input.type = "file";
+              input.accept = "video/*";
+              input.multiple = true;
+              input.onchange = (e) => handleUpload((e.target as HTMLInputElement).files, "video");
+              input.click();
+            }}
+            isPending={uploading}
+            variant="secondary"
+          >
+            <FaVideo className="w-4 h-4" />
+            Upload Video
+          </Button>
+        </div>
       </div>
 
       {/* Config Info */}
@@ -173,8 +240,10 @@ export default function MediaManagementPage() {
         <Card className="p-4 bg-yellow-500/10 border-yellow-500/20">
           <p className="text-sm text-yellow-700 dark:text-yellow-400">
             <strong>Note:</strong> Configure Cloudinary environment variables to enable uploads.
-            Set <code className="px-1 py-0.5 bg-surface rounded text-xs">NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME</code> and{" "}
-            <code className="px-1 py-0.5 bg-surface rounded text-xs">NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET</code>.
+            Set <code className="px-1 py-0.5 bg-surface rounded text-xs">NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME</code>,{" "}
+            <code className="px-1 py-0.5 bg-surface rounded text-xs">NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET</code>,{" "}
+            <code className="px-1 py-0.5 bg-surface rounded text-xs">CLOUDINARY_API_KEY</code>, and{" "}
+            <code className="px-1 py-0.5 bg-surface rounded text-xs">CLOUDINARY_API_SECRET</code>.
           </p>
         </Card>
       )}
@@ -196,87 +265,168 @@ export default function MediaManagementPage() {
             <FaCloudUploadAlt className="w-8 h-8 text-muted" />
           </div>
           <h3 className="font-semibold mb-2">
-            {dragActive ? "Drop your files here" : "Drag and drop images"}
+            {dragActive ? "Drop your files here" : "Drag and drop images or videos"}
           </h3>
           <p className="text-sm text-muted mb-4">
-            or click the upload button to browse
+            or use the upload buttons above
           </p>
           <p className="text-xs text-muted">
-            Supports: JPG, PNG, GIF, WebP • Max 10MB per file
+            Images: JPG, PNG, GIF, WebP • Videos: MP4, WebM • Max 100MB per file
           </p>
         </div>
       </Card>
 
-      {/* Images Grid */}
-      {images.length === 0 ? (
+      {/* Tabs */}
+      <Tabs
+        selectedKey={activeTab}
+        onSelectionChange={(key) => setActiveTab(key as any)}
+      >
+        <Tabs.ListContainer>
+        <Tabs.List className="mb-4 border-b border-separator">
+          <Tabs.Tab
+            key="all"
+            className="data-[state=active]:border-b-2 data-[state=active]:border-accent data-[state=active]:text-accent px-4 py-2"
+            id="all"
+          >
+            All
+          </Tabs.Tab>
+          <Tabs.Tab
+            key="images"
+            className="data-[state=active]:border-b-2 data-[state=active]:border-accent data-[state=active]:text-accent px-4 py-2"
+            id="images"
+          >
+            Images
+          </Tabs.Tab>
+          <Tabs.Tab
+            key="videos"
+            className="data-[state=active]:border-b-2 data-[state=active]:border-accent data-[state=active]:text-accent px-4 py-2"
+            id="videos"
+          >
+            Videos
+          </Tabs.Tab>
+        </Tabs.List>
+        </Tabs.ListContainer>
+      </Tabs>
+
+      {/* Loading State */}
+      {loading && resources.length === 0 ? (
+        <Card className="p-12 text-center">
+          <Spinner size="lg" className="mx-auto mb-4" />
+          <p className="text-muted">Loading media from Cloudinary...</p>
+        </Card>
+      ) : filteredResources.length === 0 ? (
         <Card className="p-12 text-center">
           <div className="w-16 h-16 rounded-full bg-muted/20 mx-auto flex items-center justify-center mb-4">
             <FaImages className="w-6 h-6 text-muted" />
           </div>
-          <h3 className="text-lg font-semibold mb-2">No images yet</h3>
+          <h3 className="text-lg font-semibold mb-2">No {activeTab === "all" ? "media" : activeTab} yet</h3>
           <p className="text-muted">
-            Upload your first image to get started.
+            Upload your first {activeTab === "all" ? "file" : activeTab === "images" ? "image" : "video"} to get started.
           </p>
         </Card>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          <AnimatePresence mode="popLayout">
-            {images.map((image) => (
-              <motion.div
-                key={image.id}
-                layout
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-              >
-                <Card className="group overflow-hidden">
-                  {/* Image */}
-                  <div className="relative aspect-square bg-muted/10">
-                    <Image
-                      src={image.url}
-                      alt={image.publicId}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
-                    />
-                    {/* Overlay */}
-                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                      <button
-                        onClick={() => copyUrl(image.url, image.id)}
-                        className="p-2 bg-white/20 rounded-lg hover:bg-white/30 transition-colors"
-                        title="Copy URL"
-                      >
-                        {copiedId === image.id ? (
-                          <FaCheck className="w-4 h-4 text-green-400" />
-                        ) : (
-                          <FaCopy className="w-4 h-4 text-white" />
-                        )}
-                      </button>
-                      <button
-                        onClick={() => handleDelete(image)}
-                        disabled={deleting === image.id}
-                        className="p-2 bg-white/20 rounded-lg hover:bg-red-500/50 transition-colors disabled:opacity-50"
-                        title="Delete"
-                      >
-                        {deleting === image.id ? (
-                          <Spinner size="sm" />
-                        ) : (
-                          <FaTrash className="w-4 h-4 text-white" />
-                        )}
-                      </button>
+        <>
+          {/* Resources Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            <AnimatePresence mode="popLayout">
+              {filteredResources.map((resource) => (
+                <motion.div
+                  key={resource.asset_id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                >
+                  <Card className="group overflow-hidden">
+                    {/* Media */}
+                    <div className="relative aspect-square bg-muted/10">
+                      {resource.resource_type === "image" ? (
+                        <Image
+                          src={resource.secure_url}
+                          alt={resource.public_id}
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
+                        />
+                      ) : (
+                        <div className="relative w-full h-full">
+                          <video
+                            src={resource.secure_url}
+                            className="w-full h-full object-cover"
+                            muted
+                            loop
+                            onMouseEnter={(e) => e.currentTarget.play()}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.pause();
+                              e.currentTarget.currentTime = 0;
+                            }}
+                          />
+                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <div className="w-12 h-12 rounded-full bg-black/50 flex items-center justify-center">
+                              <FaPlay className="w-5 h-5 text-white ml-0.5" />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      {/* Overlay */}
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                        <button
+                          onClick={() => copyUrl(resource.secure_url, resource.asset_id)}
+                          className="p-2 bg-white/20 rounded-lg hover:bg-white/30 transition-colors"
+                          title="Copy URL"
+                        >
+                          {copiedId === resource.asset_id ? (
+                            <FaCheck className="w-4 h-4 text-green-400" />
+                          ) : (
+                            <FaCopy className="w-4 h-4 text-white" />
+                          )}
+                        </button>
+                        <button
+                          onClick={() => handleDelete(resource)}
+                          disabled={deleting === resource.asset_id}
+                          className="p-2 bg-white/20 rounded-lg hover:bg-red-500/50 transition-colors disabled:opacity-50"
+                          title="Delete"
+                        >
+                          {deleting === resource.asset_id ? (
+                            <Spinner size="sm" />
+                          ) : (
+                            <FaTrash className="w-4 h-4 text-white" />
+                          )}
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                  {/* Info */}
-                  <div className="p-2">
-                    <p className="text-xs text-muted truncate">
-                      {image.width}×{image.height} • {image.format.toUpperCase()}
-                    </p>
-                  </div>
-                </Card>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </div>
+                    {/* Info */}
+                    <div className="p-2">
+                      <p className="text-xs text-muted truncate flex items-center gap-1">
+                        {resource.resource_type === "video" ? (
+                          <FaVideo className="w-3 h-3" />
+                        ) : (
+                          <FaImage className="w-3 h-3" />
+                        )}
+                        {resource.width}×{resource.height} • {resource.format.toUpperCase()}
+                      </p>
+                    </div>
+                  </Card>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+
+          {/* Load More */}
+          {hasMore && (
+            <div className="flex justify-center">
+              <Button
+                onPress={() => {
+                  const resourceType = activeTab === "all" ? "all" : activeTab === "images" ? "image" : "video";
+                  fetchResources(resourceType as any, nextCursor || undefined);
+                }}
+                isPending={loading}
+              >
+                {loading ? "Loading..." : "Load More"}
+              </Button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

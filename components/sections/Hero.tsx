@@ -197,9 +197,9 @@ export function Hero({ className = "", profile, socialLinks = [] }: HeroProps) {
     offset: ["start start", "end start"],
   });
 
-  // Parallax transforms
-  const y = useTransform(scrollYProgress, [0, 1], [0, 100]);
-  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+  // Parallax transforms - using higher threshold for mobile-friendly fade
+  const y = useTransform(scrollYProgress, [0, 1], [0, 200]);
+  const opacity = useTransform(scrollYProgress, [0, 0.85], [1, 0]);
 
   // Mouse tracking for interactive elements
   const mouseX = useSpring(useMotionValue(0), { stiffness: 50, damping: 20 });

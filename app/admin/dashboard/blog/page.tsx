@@ -29,6 +29,7 @@ const defaultPost: Partial<BlogPost> = {
   excerpt: "",
   content: "",
   cover_image: "",
+  video_url: "",
   tags: [],
   author: "",
   published: false,
@@ -140,6 +141,7 @@ export default function BlogManagementPage() {
             excerpt: editingPost.excerpt || null,
             content: editingPost.content,
             cover_image: editingPost.cover_image || null,
+            video_url: editingPost.video_url || null,
             tags: editingPost.tags || [],
             author: editingPost.author || null,
             published: editingPost.published,
@@ -159,6 +161,7 @@ export default function BlogManagementPage() {
           excerpt: editingPost.excerpt || null,
           content: editingPost.content,
           cover_image: editingPost.cover_image || null,
+          video_url: editingPost.video_url || null,
           tags: editingPost.tags || [],
           author: editingPost.author || null,
           published: editingPost.published || false,
@@ -467,6 +470,18 @@ export default function BlogManagementPage() {
                     <Input placeholder="https://..." />
                   </TextField>
                 </div>
+
+                <TextField
+                  name="video_url"
+                  value={editingPost?.video_url || ""}
+                  onChange={(value) =>
+                    setEditingPost((prev) => prev ? ({ ...prev, video_url: value }) : prev)
+                  }
+                >
+                  <Label>Video URL (optional)</Label>
+                  <Input placeholder="https://youtube.com/watch?v=... or https://vimeo.com/..." />
+                  <Description>YouTube, Vimeo, or direct video file URL</Description>
+                </TextField>
 
                 {/* Tags */}
                 <div className="space-y-2">

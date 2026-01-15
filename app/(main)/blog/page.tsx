@@ -30,13 +30,13 @@ export default async function BlogPage() {
       <Container>
         {/* Header */}
         <FadeInSection className="mb-12">
-          <Link
+          {/* <Link
             href="/"
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-accent transition-colors mb-6"
           >
             <FaArrowLeft size={12} />
             Back to Home
-          </Link>
+          </Link> */}
 
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
             <div>
@@ -44,7 +44,7 @@ export default async function BlogPage() {
                 Blog
               </h1>
               <p className="text-lg text-muted-foreground max-w-2xl">
-                Thoughts, tutorials, and insights on web development, programming, 
+                Thoughts, tutorials, and insights on web development, programming,
                 and technology. Sharing what I learn along the way.
               </p>
             </div>

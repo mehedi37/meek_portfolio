@@ -4,9 +4,10 @@ import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import Link from "next/link";
 import { Card, Chip, Button } from "@heroui/react";
-import { FaArrowRight, FaPen, FaClock } from "react-icons/fa";
-import { HiSparkles, HiDocumentText } from "react-icons/hi";
+import { FaArrowRight, FaPen } from "react-icons/fa";
+import { HiDocumentText } from "react-icons/hi";
 import type { BlogPost } from "@/lib/supabase/types";
+import { BlogCard } from "@/components/ui/BlogCard";
 
 interface BlogPreviewProps {
   className?: string;
@@ -14,80 +15,8 @@ interface BlogPreviewProps {
   limit?: number;
 }
 
-// Blog card component using HeroUI Card
-function BlogPostCard({ post, index }: { post: BlogPost; index: number }) {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
-
-  const formatDate = (dateStr: string | null) => {
-    if (!dateStr) return "Unknown date";
-    return new Date(dateStr).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-  };
-
-  return (
-    <motion.article
-      ref={ref}
-      initial={{ opacity: 0, y: 30 }}
-      animate={isInView ? { opacity: 1, y: 0 } : {}}
-      transition={{ delay: index * 0.1, duration: 0.5 }}
-    >
-      <Link href={`/blog/${post.slug}`}>
-        <Card variant="default" className="h-full overflow-hidden hover:scale-[1.02] transition-transform group">
-          {/* Image */}
-          {post.cover_image && (
-            <div className="relative h-48 overflow-hidden">
-              <img
-                src={post.cover_image}
-                alt={post.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-              <div className="absolute inset-0 bg-linear-to-t from-surface via-transparent to-transparent" />
-            </div>
-          )}
-
-          <Card.Content className="p-6 space-y-4">
-            {/* Tags */}
-            {post.tags && post.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {post.tags.slice(0, 2).map((tag) => (
-                  <Chip key={tag} variant="soft" size="sm" color="accent">
-                    {tag}
-                  </Chip>
-                ))}
-              </div>
-            )}
-
-            {/* Title */}
-            <h3 className="text-lg font-semibold line-clamp-2 group-hover:text-accent transition-colors">
-              {post.title}
-            </h3>
-
-            {/* Excerpt */}
-            <p className="text-sm text-muted line-clamp-2">
-              {post.excerpt}
-            </p>
-
-            {/* Meta */}
-            <div className="flex items-center justify-between text-xs text-muted pt-2">
-              <span>{formatDate(post.published_at || post.created_at)}</span>
-              <span className="flex items-center gap-1">
-                <FaClock className="w-3 h-3" />
-                {post.reading_time} min read
-              </span>
-            </div>
-          </Card.Content>
-        </Card>
-      </Link>
-    </motion.article>
-  );
-}
-
 /**
- * Blog Preview Section - Latest articles with HeroUI Cards
+ * Blog Preview Section - Latest articles using common BlogCard
  */
 export function BlogPreview({
   className = "",
@@ -128,10 +57,10 @@ export function BlogPreview({
 
         {hasPosts ? (
           <>
-            {/* Blog Grid */}
+            {/* Blog Grid - Using common BlogCard */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
               {displayPosts.map((post, index) => (
-                <BlogPostCard key={post.slug} post={post} index={index} />
+                <BlogCard key={post.slug} post={post} index={index} />
               ))}
             </div>
 

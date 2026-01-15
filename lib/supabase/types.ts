@@ -191,6 +191,7 @@ export type Database = {
           description: string;
           long_description: string | null;
           image: string | null;
+          video_url: string | null;
           images: string[] | null;
           tech_stack: string[];
           github_url: string | null;
@@ -208,6 +209,7 @@ export type Database = {
           description: string;
           long_description?: string | null;
           image?: string | null;
+          video_url?: string | null;
           images?: string[] | null;
           tech_stack: string[];
           github_url?: string | null;
@@ -225,6 +227,7 @@ export type Database = {
           description?: string;
           long_description?: string | null;
           image?: string | null;
+          video_url?: string | null;
           images?: string[] | null;
           tech_stack?: string[];
           github_url?: string | null;
@@ -338,6 +341,7 @@ export type Database = {
           excerpt: string | null;
           content: string;
           cover_image: string | null;
+          video_url: string | null;
           tags: string[] | null;
           author: string | null;
           published: boolean | null;
@@ -355,6 +359,7 @@ export type Database = {
           excerpt?: string | null;
           content: string;
           cover_image?: string | null;
+          video_url?: string | null;
           tags?: string[] | null;
           author?: string | null;
           published?: boolean | null;
@@ -372,6 +377,7 @@ export type Database = {
           excerpt?: string | null;
           content?: string;
           cover_image?: string | null;
+          video_url?: string | null;
           tags?: string[] | null;
           author?: string | null;
           published?: boolean | null;

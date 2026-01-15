@@ -1,4 +1,7 @@
 # Portfolio Website - Project Documentation
+Never write redundant code!
+Use less raw css.
+Optimize methods and logics.
 
 ## Base Idea
 A unique, visually engaging portfolio website that tells a story through scroll-triggered animations. The centerpiece is a "Growing Boy" animation that evolves as users scroll through the page - starting as a child in the hero section, growing into a teen showing skills, becoming a young adult showcasing projects, and finally a professional in the experience section. This creates an emotional connection and memorable user experience.

@@ -27,13 +27,13 @@ export default async function ProjectsPage() {
       <Container>
         {/* Header */}
         <FadeInSection className="mb-12">
-          <Link
+          {/* <Link
             href="/"
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-accent transition-colors mb-6"
           >
             <FaArrowLeft size={12} />
             Back to Home
-          </Link>
+          </Link> */}
 
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
             <div>

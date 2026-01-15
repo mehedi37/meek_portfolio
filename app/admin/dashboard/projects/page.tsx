@@ -27,6 +27,7 @@ const defaultProject: Partial<Project> = {
   description: "",
   long_description: "",
   image: "",
+  video_url: "",
   images: [],
   tech_stack: [],
   live_url: "",
@@ -133,6 +134,7 @@ export default function ProjectsManagementPage() {
             description: editingProject.description,
             long_description: editingProject.long_description || null,
             image: editingProject.image || null,
+            video_url: editingProject.video_url || null,
             images: editingProject.images || [],
             tech_stack: editingProject.tech_stack || [],
             live_url: editingProject.live_url || null,
@@ -152,6 +154,7 @@ export default function ProjectsManagementPage() {
           description: editingProject.description,
           long_description: editingProject.long_description || null,
           image: editingProject.image || null,
+          video_url: editingProject.video_url || null,
           images: editingProject.images || [],
           tech_stack: editingProject.tech_stack || [],
           live_url: editingProject.live_url || null,
@@ -226,7 +229,7 @@ export default function ProjectsManagementPage() {
           </Button>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <AnimatePresence mode="popLayout">
             {projects.map((project) => (
               <motion.div
@@ -434,6 +437,18 @@ export default function ProjectsManagementPage() {
                   <Label>Image URL</Label>
                   <Input placeholder="https://example.com/image.jpg" />
                   <Description>URL to project screenshot or thumbnail</Description>
+                </TextField>
+
+                <TextField
+                  name="video_url"
+                  value={editingProject?.video_url || ""}
+                  onChange={(value) =>
+                    setEditingProject((prev) => prev ? ({ ...prev, video_url: value }) : prev)
+                  }
+                >
+                  <Label>Video URL (optional)</Label>
+                  <Input placeholder="https://youtube.com/watch?v=... or https://vimeo.com/..." />
+                  <Description>YouTube, Vimeo, or direct video file URL</Description>
                 </TextField>
 
                 {/* Technologies */}

@@ -11,3 +11,5 @@ export { YearTimeline } from "./YearTimeline";
 export { Pagination } from "./Pagination";
 export { FloatingNavDots } from "./FloatingNavDots";
 export { FloatingNavWrapper } from "./FloatingNavWrapper";
+export { MediaDisplay, MediaThumbnail, VideoPlayer } from "./MediaDisplay";
+export { StickyBackButton } from "./StickyBackButton";
