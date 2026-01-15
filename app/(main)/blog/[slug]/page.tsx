@@ -46,6 +46,8 @@ export async function generateStaticParams() {
   return slugs.map((slug) => ({ slug }));
 }
 
+// Force dynamic rendering to avoid build-time param access issues
+export const dynamic = 'force-dynamic';
 // Revalidate every 15 minutes
 export const revalidate = 900;
 
@@ -111,7 +113,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                   {post.reading_time} min read
                 </span>
               )}
-              
+
               {/* Share buttons */}
               <div className="flex items-center gap-2 ml-auto">
                 <span className="text-xs text-muted-foreground mr-1">Share:</span>

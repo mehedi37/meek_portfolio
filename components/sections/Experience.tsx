@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useInView } from "framer-motion";
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { Chip, Card, Separator } from "@heroui/react";
 import { HiBriefcase, HiLocationMarker, HiCalendar, HiSparkles, HiDocumentText } from "react-icons/hi";
 import type { Experience as ExperienceType } from "@/lib/supabase/types";
@@ -24,6 +24,15 @@ function TimelineCard({
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
   const isCurrentRole = !experience.end_date;
+  const [lineHeight, setLineHeight] = useState(0);
+
+  useEffect(() => {
+    if (ref.current && isInView) {
+      const element = ref.current as HTMLDivElement;
+      const height = element.offsetHeight;
+      setLineHeight(height);
+    }
+  }, [isInView]);
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return "Present";
@@ -55,7 +64,7 @@ function TimelineCard({
       <div className="absolute left-0 md:relative md:flex md:flex-col md:items-center">
         {/* Dot */}
         <motion.div
-          className={`w-4 h-4 rounded-full border-2 z-10 ${
+          className={`relative w-4 h-4 rounded-full border-2 z-10 ${
             isCurrentRole
               ? "bg-accent border-accent"
               : "bg-surface border-default"
@@ -65,13 +74,81 @@ function TimelineCard({
           transition={{ delay: index * 0.2 + 0.3, duration: 0.3, type: "spring" }}
         >
           {isCurrentRole && (
-            <span className="absolute inset-0 rounded-full bg-accent animate-ping opacity-50" />
+            <>
+              <span className="absolute inset-0 rounded-full bg-accent animate-ping opacity-50" />
+              <span className="absolute inset-[-4px] rounded-full bg-accent/30 animate-pulse" />
+            </>
           )}
+
+          {/* Glowing pulse effect */}
+          <motion.span
+            className="absolute inset-[-6px] rounded-full bg-accent/20 blur-md"
+            animate={{
+              scale: [1, 1.3, 1],
+              opacity: [0.5, 0.8, 0.5],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              delay: index * 0.2,
+            }}
+          />
         </motion.div>
 
-        {/* Line */}
+        {/* Animated Line with Light Trail */}
         {!isLast && (
-          <div className="w-px flex-1 bg-separator" />
+          <div className="relative w-px flex-1 overflow-hidden min-h-[100px]">
+            {/* Base line */}
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-b from-separator via-separator/50 to-separator"
+              initial={{ scaleY: 0 }}
+              animate={isInView ? { scaleY: 1 } : {}}
+              transition={{ delay: index * 0.2 + 0.5, duration: 0.8 }}
+              style={{ transformOrigin: "top" }}
+            />
+
+            {/* Main light trail - moving from bottom to top */}
+            <motion.div
+              className="absolute w-full h-16"
+              initial={{ bottom: "-20%" }}
+              animate={isInView ? {
+                bottom: ["0%", "120%"],
+              } : {}}
+              transition={{
+                delay: index * 0.2 + 1,
+                duration: 1.8,
+                repeat: Infinity,
+                repeatDelay: 1,
+                ease: "easeInOut",
+              }}
+            >
+              {/* Core glow */}
+              <div className="absolute inset-x-0 h-full bg-gradient-to-t from-transparent via-accent/80 to-transparent blur-sm" />
+              {/* Bright center */}
+              <div className="absolute inset-x-0 top-1/2 h-2 -translate-y-1/2 bg-accent rounded-full blur-[2px]" />
+            </motion.div>
+
+            {/* Trailing sparkle particles */}
+            {[0, 1, 2].map((i) => (
+              <motion.div
+                key={i}
+                className="absolute left-1/2 w-1.5 h-1.5 -translate-x-1/2 rounded-full bg-accent shadow-[0_0_6px_2px_rgba(var(--accent-rgb),0.6)]"
+                initial={{ bottom: "-5%", opacity: 0 }}
+                animate={isInView ? {
+                  bottom: ["0%", "110%"],
+                  opacity: [0, 1, 1, 0],
+                  scale: [0.5, 1, 1, 0.3],
+                } : {}}
+                transition={{
+                  delay: index * 0.2 + 1.2 + i * 0.15,
+                  duration: 1.5,
+                  repeat: Infinity,
+                  repeatDelay: 2.3,
+                  ease: "easeOut",
+                }}
+              />
+            ))}
+          </div>
         )}
       </div>
 

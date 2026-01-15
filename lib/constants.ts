@@ -1,18 +1,14 @@
-import { type SiteConfig, type NavItem, type SocialLink } from "@/types";
+import { type SiteConfig, type NavItem } from "@/types";
 
+// Static site configuration - fallback values when DB is unavailable
 export const siteConfig: SiteConfig = {
-  name: process.env.NEXT_PUBLIC_SITE_NAME || "Your Name",
-  title: `Portfolio | ${process.env.NEXT_PUBLIC_SITE_NAME || "Your Name"} - Full Stack Developer`,
+  name: process.env.NEXT_PUBLIC_SITE_NAME || "Portfolio",
+  title: `Portfolio | ${process.env.NEXT_PUBLIC_SITE_NAME || "Developer"}`,
   description:
-    "Full Stack Developer specializing in React, Next.js, TypeScript, and modern web technologies. Explore my projects, skills, and professional journey.",
+    "Full Stack Developer specializing in React, Next.js, TypeScript, and modern web technologies.",
   url: process.env.NEXT_PUBLIC_SITE_URL || "https://yoursite.com",
   ogImage: "/og-image.png",
-  links: {
-    github: "https://github.com/yourusername",
-    linkedin: "https://linkedin.com/in/yourusername",
-    twitter: "https://twitter.com/yourusername",
-    email: "your.email@example.com",
-  },
+  links: {},
 };
 
 export const navItems: NavItem[] = [
@@ -20,26 +16,9 @@ export const navItems: NavItem[] = [
   { name: "Skills", href: "#skills" },
   { name: "Projects", href: "#projects" },
   { name: "Experience", href: "#experience" },
+  { name: "Certifications", href: "#certifications" },
   { name: "Blog", href: "#blog" },
   { name: "Contact", href: "#contact" },
-];
-
-export const socialLinks: SocialLink[] = [
-  {
-    name: "GitHub",
-    url: siteConfig.links.github || "#",
-    icon: "FaGithub",
-  },
-  {
-    name: "LinkedIn",
-    url: siteConfig.links.linkedin || "#",
-    icon: "FaLinkedin",
-  },
-  {
-    name: "Twitter",
-    url: siteConfig.links.twitter || "#",
-    icon: "FaTwitter",
-  },
 ];
 
 // Animation timing constants

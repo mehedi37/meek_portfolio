@@ -1,4 +1,4 @@
-import { Navbar, Footer } from "@/components/ui";
+import { Navbar, Footer, FloatingNavWrapper } from "@/components/ui";
 import {
   ScrollProgress,
   CursorGlow,
@@ -19,6 +19,7 @@ interface MainLayoutProps {
  * - CursorGlow: Interactive mouse-following glow effect
  * - FloatingShapes: Geometric shapes that react to scroll
  * - GradientOrbs: Colorful gradient blobs that move with scroll
+ * - FloatingNavDots: Vertical dot navigation when navbar hidden
  */
 export default function MainLayout({ children }: MainLayoutProps) {
   return (
@@ -35,6 +36,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
       {/* Navigation - high z-index to stay above content */}
       <Navbar />
+
+      {/* Floating dot navigation - shows when navbar is hidden */}
+      <FloatingNavWrapper />
 
       {/* Main content with higher z-index than background effects */}
       <main id="main-content" className="relative z-10">

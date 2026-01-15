@@ -33,6 +33,9 @@ export async function generateStaticParams() {
   return slugs.map((slug) => ({ slug }));
 }
 
+// Force dynamic rendering to avoid build-time param access issues
+export const dynamic = 'force-dynamic';
+
 export default async function ProjectPage({ params }: ProjectPageProps) {
   const { slug } = await params;
   const project = await getProjectBySlug(slug);

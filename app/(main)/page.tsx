@@ -3,6 +3,7 @@ import {
   Skills,
   Projects,
   Experience,
+  Certifications,
   BlogPreview,
   Contact,
 } from "@/components/sections";
@@ -62,6 +63,9 @@ export default async function HomePage() {
 
       {/* Experience Section - Professional timeline */}
       <Experience experiences={experiences} />
+
+      {/* Certifications Section - Professional credentials */}
+      <Certifications certifications={certifications} limit={4} />
 
       {/* Blog Preview Section - Latest articles */}
       <BlogPreview posts={blogPosts} />

@@ -2,9 +2,16 @@
 
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
-import { Card, Chip, Link } from "@heroui/react";
+import { Card, Chip, Link, Button } from "@heroui/react";
 import type { Certification } from "@/lib/supabase/types";
-import { FaExternalLinkAlt, FaAward, FaCertificate, FaCalendar } from "react-icons/fa";
+import {
+  FaExternalLinkAlt,
+  FaAward,
+  FaCertificate,
+  FaCalendar,
+  FaArrowRight,
+} from "react-icons/fa";
+import { HiAcademicCap } from "react-icons/hi";
 
 // Demo certifications using Supabase Certification type with snake_case field names
 const DEMO_CERTIFICATIONS: Certification[] = [];
@@ -12,6 +19,8 @@ const DEMO_CERTIFICATIONS: Certification[] = [];
 interface CertificationsProps {
   className?: string;
   certifications?: Certification[];
+  limit?: number;
+  showViewAll?: boolean;
 }
 
 interface CertificationCardProps {
@@ -32,7 +41,10 @@ function CertificationCard({ certification, index }: CertificationCardProps) {
       whileHover={{ y: -4 }}
       className="h-full"
     >
-      <Card variant="default" className="h-full overflow-hidden group hover:scale-[1.02] transition-transform">
+      <Card
+        variant="default"
+        className="h-full overflow-hidden group hover:scale-[1.02] transition-transform"
+      >
         {/* Image */}
         <div className="relative h-36 overflow-hidden">
           {certification.image ? (
@@ -61,9 +73,7 @@ function CertificationCard({ certification, index }: CertificationCardProps) {
           <h3 className="font-semibold text-base line-clamp-2 group-hover:text-accent transition-colors">
             {certification.title}
           </h3>
-          <p className="text-sm text-muted">
-            {certification.issuer}
-          </p>
+          <p className="text-sm text-muted">{certification.issuer}</p>
 
           {/* Date and link */}
           <div className="flex items-center justify-between pt-3 border-t border-separator">
@@ -102,9 +112,17 @@ function CertificationCard({ certification, index }: CertificationCardProps) {
 export function Certifications({
   className = "",
   certifications = DEMO_CERTIFICATIONS,
+  limit,
+  showViewAll = true,
 }: CertificationsProps) {
   const sectionRef = useRef(null);
   const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
+
+  // Limit certifications if specified
+  const displayCertifications = limit
+    ? certifications.slice(0, limit)
+    : certifications;
+  const hasMore = limit && certifications.length > limit;
 
   return (
     <section
@@ -121,21 +139,21 @@ export function Certifications({
           transition={{ duration: 0.6 }}
         >
           <Chip color="accent" variant="soft" className="mb-6 gap-2">
-            <FaCertificate className="w-3 h-3" />
+            <HiAcademicCap className="w-3 h-3" />
             Certifications
           </Chip>
           <h2 className="text-4xl lg:text-5xl font-bold mb-4">
             Professional Credentials
           </h2>
           <p className="text-lg text-muted max-w-2xl mx-auto text-balance">
-            Industry-recognized certifications that validate my expertise
-            in modern technologies and best practices.
+            Industry-recognized certifications that validate my expertise in
+            modern technologies and best practices.
           </p>
         </motion.div>
 
         {/* Certifications Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {certifications.map((cert, index) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+          {displayCertifications.map((cert, index) => (
             <CertificationCard
               key={cert.id}
               certification={cert}
@@ -143,6 +161,23 @@ export function Certifications({
             />
           ))}
         </div>
+
+        {/* View All Button */}
+        {hasMore && (
+          <motion.div
+            className="text-center"
+            initial={{ opacity: 0, y: 20 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ delay: 0.4, duration: 0.5 }}
+          >
+            <Link href="/certifications" underline="none">
+              <Button variant="secondary" size="lg" className="group">
+                View All Certifications
+                <FaArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </Link>
+          </motion.div>
+        )}
       </div>
     </section>
   );

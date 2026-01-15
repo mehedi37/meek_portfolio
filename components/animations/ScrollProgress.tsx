@@ -29,17 +29,17 @@ export function ScrollProgress({
       } ${className}`}
     >
       {/* Background track */}
-      <div className="absolute inset-0 bg-[var(--glass-border)]" />
-      
+      <div className="absolute inset-0 bg-border/20" />
+
       {/* Progress bar */}
       <motion.div
-        className="absolute inset-0 origin-left bg-gradient-to-r from-[var(--gradient-start)] via-[var(--gradient-mid)] to-[var(--gradient-end)]"
+        className="absolute inset-0 origin-left bg-gradient-to-r from-accent via-primary to-success"
         style={{ scaleX }}
       />
-      
+
       {/* Glow effect */}
       <motion.div
-        className="absolute inset-0 origin-left bg-gradient-to-r from-[var(--gradient-start)] via-[var(--gradient-mid)] to-[var(--gradient-end)] blur-sm opacity-50"
+        className="absolute inset-0 origin-left bg-gradient-to-r from-accent via-primary to-success blur-sm opacity-50"
         style={{ scaleX }}
       />
     </div>
@@ -83,10 +83,11 @@ export function CircularScrollProgress({
           cy={center}
           r={radius}
           fill="transparent"
-          stroke="var(--glass-border)"
+          stroke="currentColor"
           strokeWidth={strokeWidth}
+          className="text-border/20"
         />
-        
+
         {/* Progress circle */}
         <motion.circle
           cx={center}
@@ -98,9 +99,10 @@ export function CircularScrollProgress({
           strokeLinecap="round"
           style={{ pathLength }}
           strokeDasharray={circumference}
+          className="text-accent"
           strokeDashoffset={0}
         />
-        
+
         {/* Gradient definition */}
         <defs>
           <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">

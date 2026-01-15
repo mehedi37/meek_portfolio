@@ -23,6 +23,8 @@ export type {
   BlogPost,
   BlogPostInsert,
   BlogPostUpdate,
+  SocialLink,
+  SiteProfile,
 } from "@/lib/supabase/types";
 
 // Additional UI/local types not in database
@@ -65,12 +67,6 @@ export interface BlogFrontmatter {
   featured?: boolean;
 }
 
-export interface SocialLink {
-  name: string;
-  url: string;
-  icon: string;
-}
-
 export interface ContactFormData {
   name: string;
   email: string;
@@ -92,22 +88,19 @@ export interface SiteConfig {
   };
 }
 
-// Animation stage types for Growing Boy
-export type AnimationStage = "child" | "teen" | "youngAdult" | "professional";
-
-export interface AnimationConfig {
-  stage: AnimationStage;
-  scrollStart: number;
-  scrollEnd: number;
-  scale: number;
-  y: number;
-  rotation: number;
-  opacity: number;
-}
-
 // Navigation
 export interface NavItem {
   name: string;
   href: string;
   isExternal?: boolean;
+}
+
+// Animation stages for scroll-linked animations (Growing Boy)
+export type AnimationStage = "child" | "teen" | "youngAdult" | "professional";
+
+// Animation stage configuration
+export interface AnimationStageConfig {
+  name: string;
+  start: number;
+  end: number;
 }

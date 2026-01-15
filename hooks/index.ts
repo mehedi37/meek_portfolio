@@ -10,3 +10,5 @@ export {
   usePrefersReducedMotion,
   usePrefersDarkMode,
 } from "./useMediaQuery";
+export { useScrollDirection } from "./useScrollDirection";
+export { useActiveSection } from "./useActiveSection";

@@ -1,10 +1,11 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { socialLinks } from "@/lib/constants";
-import { FaGithub, FaLinkedin, FaTwitter, FaEnvelope, FaInstagram, FaYoutube, FaDribbble } from "react-icons/fa";
+import type { SocialLink } from "@/lib/supabase/types";
+import { FaGithub, FaLinkedin, FaTwitter, FaEnvelope, FaInstagram, FaYoutube, FaDribbble, FaFacebook, FaDiscord, FaMedium, FaDev, FaStackOverflow } from "react-icons/fa";
+import { SiHashnode } from "react-icons/si";
 
-// Icon mapping
+// Icon mapping - supports database icon field values and platform names
 const iconMap: Record<string, React.ElementType> = {
   FaGithub,
   FaLinkedin,
@@ -13,6 +14,26 @@ const iconMap: Record<string, React.ElementType> = {
   FaInstagram,
   FaYoutube,
   FaDribbble,
+  FaFacebook,
+  FaDiscord,
+  FaMedium,
+  FaDev,
+  FaStackOverflow,
+  SiHashnode,
+  // Platform name mappings (lowercase)
+  github: FaGithub,
+  linkedin: FaLinkedin,
+  twitter: FaTwitter,
+  email: FaEnvelope,
+  instagram: FaInstagram,
+  youtube: FaYoutube,
+  dribbble: FaDribbble,
+  facebook: FaFacebook,
+  discord: FaDiscord,
+  medium: FaMedium,
+  dev: FaDev,
+  stackoverflow: FaStackOverflow,
+  hashnode: SiHashnode,
 };
 
 interface SocialLinksProps {
@@ -20,10 +41,12 @@ interface SocialLinksProps {
   size?: "sm" | "md" | "lg";
   showLabels?: boolean;
   vertical?: boolean;
+  links?: SocialLink[];
 }
 
 /**
- * ORBITAL Social Links
+ * Social Links Component
+ * Accepts database social links as props
  * Glass morphism design with gradient hover effects
  */
 export function SocialLinks({
@@ -31,6 +54,7 @@ export function SocialLinks({
   size = "md",
   showLabels = false,
   vertical = false,
+  links = [],
 }: SocialLinksProps) {
   const sizeClasses = {
     sm: "p-2.5",
@@ -44,16 +68,21 @@ export function SocialLinks({
     lg: 24,
   };
 
+  if (links.length === 0) {
+    return null;
+  }
+
   return (
     <div
       className={`flex ${vertical ? "flex-col" : "flex-row"} gap-3 ${className}`}
     >
-      {socialLinks.map((link, index) => {
-        const IconComponent = iconMap[link.icon] || FaGithub;
+      {links.map((link, index) => {
+        // Try icon field first, then platform name (lowercase)
+        const IconComponent = iconMap[link.icon || ""] || iconMap[link.platform.toLowerCase()] || FaGithub;
 
         return (
           <motion.a
-            key={link.name}
+            key={link.id}
             href={link.url}
             target="_blank"
             rel="noopener noreferrer"
@@ -63,11 +92,11 @@ export function SocialLinks({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1, duration: 0.4 }}
-            aria-label={link.name}
+            aria-label={link.platform}
           >
             <IconComponent size={iconSizes[size]} />
             {showLabels && (
-              <span className="text-sm font-medium">{link.name}</span>
+              <span className="text-sm font-medium">{link.platform}</span>
             )}
           </motion.a>
         );

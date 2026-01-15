@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 import { Button } from "@heroui/react";
 import { navItems, siteConfig } from "@/lib/constants";
 import { ThemeToggle } from "./ThemeToggle";
-import { useIsMobile } from "@/hooks";
+import { useIsMobile, useScrollDirection } from "@/hooks";
 import {
   HiHome,
   HiLightningBolt,
@@ -17,6 +17,7 @@ import {
   HiMail,
   HiMenu,
   HiX,
+  HiAcademicCap,
 } from "react-icons/hi";
 
 // Icon mapping for nav items
@@ -25,6 +26,7 @@ const navIcons: Record<string, React.ElementType> = {
   Skills: HiLightningBolt,
   Projects: HiCollection,
   Experience: HiBriefcase,
+  Certifications: HiAcademicCap,
   Blog: HiNewspaper,
   Contact: HiMail,
 };
@@ -43,9 +45,13 @@ export function Navbar({ className = "" }: NavbarProps) {
   const [activeSection, setActiveSection] = useState("hero");
   const isMobile = useIsMobile();
   const pathname = usePathname();
+  const { scrollDirection } = useScrollDirection({ threshold: 10 });
 
   // Check if we're on the home page
   const isHomePage = pathname === "/" || pathname === "";
+
+  // Hide navbar on scroll down, show on scroll up
+  const shouldHideNavbar = scrollDirection === "down" && isScrolled && !isOpen;
 
   // Handle scroll effect
   useEffect(() => {
@@ -56,7 +62,7 @@ export function Navbar({ className = "" }: NavbarProps) {
       if (!isHomePage) return;
 
       // Determine active section
-      const sections = ["hero", "skills", "projects", "experience", "blog", "contact"];
+      const sections = ["hero", "skills", "projects", "experience", "certifications", "blog", "contact"];
       for (const section of sections.reverse()) {
         const element = document.getElementById(section);
         if (element) {
@@ -137,8 +143,8 @@ export function Navbar({ className = "" }: NavbarProps) {
       <motion.header
         className={`fixed top-0 left-0 right-0 z-50 ${className}`}
         initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
+        animate={{ y: shouldHideNavbar ? -100 : 0 }}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
       >
         <nav
           className={`mx-auto p-8 sm:px-6 lg:p-8 transition-all duration-300 ${
@@ -218,7 +224,8 @@ export function Navbar({ className = "" }: NavbarProps) {
                   size="sm"
                   onPress={() => handleNavClick("#contact")}
                 >
-                  Hire Me
+                  <HiMail className="w-4 h-4" />
+                  Contact
                 </Button>
               </div>
 
