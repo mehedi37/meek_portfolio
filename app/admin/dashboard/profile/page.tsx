@@ -45,6 +45,7 @@ const defaultProfile: Partial<SiteProfile> = {
   status_color: "success",
   years_experience: 0,
   completed_projects: 0,
+  happy_clients: 0,
 };
 
 // Default social link matching database schema
@@ -124,6 +125,7 @@ export default function ProfilePage() {
         status_color: profile.status_color || "success",
         years_experience: profile.years_experience || 0,
         completed_projects: profile.completed_projects || 0,
+        happy_clients: profile.happy_clients || 0,
       };
 
       if (existing) {
@@ -413,7 +415,7 @@ export default function ProfilePage() {
           <Separator />
 
           {/* Stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <TextField
               name="years_experience"
               type="number"
@@ -441,6 +443,21 @@ export default function ProfilePage() {
               }
             >
               <Label>Completed Projects</Label>
+              <Input placeholder="0" />
+            </TextField>
+
+            <TextField
+              name="happy_clients"
+              type="number"
+              value={String(profile.happy_clients || 0)}
+              onChange={(value) =>
+                setProfile((prev) => ({
+                  ...prev,
+                  happy_clients: parseInt(value) || 0,
+                }))
+              }
+            >
+              <Label>Happy Clients</Label>
               <Input placeholder="0" />
             </TextField>
           </div>

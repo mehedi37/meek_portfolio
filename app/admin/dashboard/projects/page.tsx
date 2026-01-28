@@ -35,6 +35,8 @@ const defaultProject: Partial<Project> = {
   featured: false,
   is_active: true,
   sort_order: 0,
+  start_date: new Date().toISOString().split('T')[0],
+  end_date: null,
 };
 
 export default function ProjectsManagementPage() {
@@ -142,6 +144,8 @@ export default function ProjectsManagementPage() {
             featured: editingProject.featured,
             is_active: editingProject.is_active,
             sort_order: editingProject.sort_order,
+            start_date: editingProject.start_date,
+            end_date: editingProject.end_date || null,
           })
           .eq("id", editingProject.id);
 
@@ -162,6 +166,8 @@ export default function ProjectsManagementPage() {
           featured: editingProject.featured || false,
           is_active: editingProject.is_active !== false,
           sort_order: editingProject.sort_order || 0,
+          start_date: editingProject.start_date || new Date().toISOString().split('T')[0],
+          end_date: editingProject.end_date || null,
         });
 
         if (error) throw error;
@@ -512,6 +518,36 @@ export default function ProjectsManagementPage() {
                   >
                     <Label>GitHub URL (optional)</Label>
                     <Input placeholder="https://github.com/user/repo" />
+                  </TextField>
+                </div>
+
+                {/* Project Timeline */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <TextField
+                    name="start_date"
+                    type="date"
+                    isRequired
+                    value={editingProject?.start_date || ""}
+                    onChange={(value) =>
+                      setEditingProject((prev) => prev ? ({ ...prev, start_date: value }) : prev)
+                    }
+                  >
+                    <Label>Start Date</Label>
+                    <Input />
+                    <Description>When you started the project</Description>
+                  </TextField>
+
+                  <TextField
+                    name="end_date"
+                    type="date"
+                    value={editingProject?.end_date || ""}
+                    onChange={(value) =>
+                      setEditingProject((prev) => prev ? ({ ...prev, end_date: value || null }) : prev)
+                    }
+                  >
+                    <Label>End Date (optional)</Label>
+                    <Input />
+                    <Description>Leave empty for ongoing projects</Description>
                   </TextField>
                 </div>
 

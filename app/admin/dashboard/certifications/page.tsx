@@ -50,6 +50,7 @@ export default function CertificationsManagementPage() {
       const { data, error } = await supabase
         .from("certifications")
         .select("*")
+        .order("date", { ascending: false })
         .order("sort_order", { ascending: true });
 
       if (error) throw error;

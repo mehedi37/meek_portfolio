@@ -1,9 +1,9 @@
 "use client";
 
 import { motion, useInView } from "framer-motion";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { Card, Chip, Tabs, Separator } from "@heroui/react";
-import { HiCode, HiServer, HiDatabase, HiCloud, HiSparkles, HiTrendingUp } from "react-icons/hi";
+import { HiCode, HiServer, HiDatabase, HiCloud, HiSparkles, HiTrendingUp, HiChevronLeft, HiChevronRight } from "react-icons/hi";
 import {
   FaDocker,
   FaGitAlt,
@@ -11,7 +11,7 @@ import {
 import {
   SiVercel,
 } from "react-icons/si";
-import type { Skill, SkillCategory } from "@/lib/supabase/types";
+import type { Skill, SkillCategory, SiteProfile } from "@/lib/supabase/types";
 import { IconRenderer, getIconComponent } from "@/components/admin/IconSearch";
 
 // Default icons for categories
@@ -34,6 +34,7 @@ interface SkillsProps {
   className?: string;
   categories?: SkillCategory[];
   skills?: Skill[];
+  profile?: SiteProfile | null;
 }
 
 // Animated skill card with modern glassmorphism design
@@ -146,7 +147,47 @@ function StatCard({ label, value, icon: Icon, index }: { label: string; value: s
  * Skills Section - Bento Grid with Accordion
  * Uses HeroUI v3 semantic classes
  */
-export function Skills({ className = "", categories = [], skills = [] }: SkillsProps) {
+export function Skills({ className = "", categories = [], skills = [], profile }: SkillsProps) {
+  // Scroll indicator state
+  const tabsContainerRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  // Check scroll position
+  const checkScroll = useCallback(() => {
+    const container = tabsContainerRef.current;
+    if (container) {
+      setCanScrollLeft(container.scrollLeft > 0);
+      setCanScrollRight(
+        container.scrollLeft < container.scrollWidth - container.clientWidth - 1
+      );
+    }
+  }, []);
+
+  useEffect(() => {
+    const container = tabsContainerRef.current;
+    if (container) {
+      checkScroll();
+      container.addEventListener("scroll", checkScroll);
+      window.addEventListener("resize", checkScroll);
+      return () => {
+        container.removeEventListener("scroll", checkScroll);
+        window.removeEventListener("resize", checkScroll);
+      };
+    }
+  }, [checkScroll, categories]);
+
+  const scrollTabs = (direction: "left" | "right") => {
+    const container = tabsContainerRef.current;
+    if (container) {
+      const scrollAmount = 200;
+      container.scrollBy({
+        left: direction === "left" ? -scrollAmount : scrollAmount,
+        behavior: "smooth"
+      });
+    }
+  };
+
   // Group skills by category_id
   const skillsByCategory = skills.reduce((acc, skill) => {
     const categoryId = skill.category_id || "other";
@@ -157,16 +198,31 @@ export function Skills({ className = "", categories = [], skills = [] }: SkillsP
     return acc;
   }, {} as Record<string, Skill[]>);
 
-  // Compute stats from data
+  // Compute stats from profile or fallback
   const totalSkills = skills.length;
-  const totalCategories = categories.length;
 
-  // Fallback stats if no data
+  // Use profile data if available, otherwise use fallback values
   const stats = [
-    { label: "Years Experience", value: "3+", icon: HiTrendingUp },
-    { label: "Projects Completed", value: "35+", icon: HiCode },
-    { label: "Happy Clients", value: "40+", icon: HiSparkles },
-    { label: "Technologies", value: totalSkills > 0 ? `${totalSkills}+` : "20+", icon: HiServer },
+    {
+      label: "Years Experience",
+      value: profile?.years_experience ? `${profile.years_experience}+` : "3+",
+      icon: HiTrendingUp
+    },
+    {
+      label: "Projects Completed",
+      value: profile?.completed_projects ? `${profile.completed_projects}+` : "35+",
+      icon: HiCode
+    },
+    {
+      label: "Happy Clients",
+      value: profile?.happy_clients ? `${profile.happy_clients}+` : "40+",
+      icon: HiSparkles
+    },
+    {
+      label: "Technologies",
+      value: totalSkills > 0 ? `${totalSkills}+` : "20+",
+      icon: HiServer
+    },
   ];
 
   // Check if we have data
@@ -220,14 +276,46 @@ export function Skills({ className = "", categories = [], skills = [] }: SkillsP
                     className="w-full"
                     defaultSelectedKey={categories[0]?.id || ""}
                   >
-                    {/* Tabs List Container with horizontal scroll */}
-                    <Tabs.ListContainer
-                      className="mb-8 overflow-x-auto pb-2 scrollbar-hide"
-                      style={{
-                        scrollbarWidth: "none",
-                        msOverflowStyle: "none",
-                      }}
-                    >
+                    {/* Tabs List Container with horizontal scroll and indicators */}
+                    <div className="relative mb-8">
+                      {/* Left scroll indicator */}
+                      {canScrollLeft && (
+                        <button
+                          onClick={() => scrollTabs("left")}
+                          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-surface/90 backdrop-blur-sm border border-separator shadow-lg flex items-center justify-center hover:bg-default transition-colors"
+                          aria-label="Scroll tabs left"
+                        >
+                          <HiChevronLeft className="w-5 h-5 text-foreground" />
+                        </button>
+                      )}
+
+                      {/* Right scroll indicator */}
+                      {canScrollRight && (
+                        <button
+                          onClick={() => scrollTabs("right")}
+                          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-surface/90 backdrop-blur-sm border border-separator shadow-lg flex items-center justify-center hover:bg-default transition-colors"
+                          aria-label="Scroll tabs right"
+                        >
+                          <HiChevronRight className="w-5 h-5 text-foreground" />
+                        </button>
+                      )}
+
+                      {/* Gradient fade indicators */}
+                      {canScrollLeft && (
+                        <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-surface to-transparent pointer-events-none z-[5]" />
+                      )}
+                      {canScrollRight && (
+                        <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-surface to-transparent pointer-events-none z-[5]" />
+                      )}
+
+                      <Tabs.ListContainer
+                        ref={tabsContainerRef}
+                        className="overflow-x-auto pb-2 scrollbar-hide px-1"
+                        style={{
+                          scrollbarWidth: "none",
+                          msOverflowStyle: "none",
+                        }}
+                      >
                       <Tabs.List
                         aria-label="Skill Categories"
                         className="w-fit *:h-auto *:w-fit *:px-4 *:py-2.5 *:text-sm *:font-medium gap-2"
@@ -254,6 +342,7 @@ export function Skills({ className = "", categories = [], skills = [] }: SkillsP
                         })}
                       </Tabs.List>
                     </Tabs.ListContainer>
+                    </div>
 
                     {/* Tab Panels with masonry grid layout */}
                     {categories.map((category) => {

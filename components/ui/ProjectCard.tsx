@@ -4,11 +4,25 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import type { Project } from "@/lib/supabase/types";
 import { MediaThumbnail } from "./MediaDisplay";
-import { FaGithub, FaExternalLinkAlt, FaStar } from "react-icons/fa";
+import { FaGithub, FaExternalLinkAlt, FaStar, FaCalendar } from "react-icons/fa";
 
 interface ProjectCardProps {
   project: Project;
   index?: number;
+}
+
+// Format date for display
+function formatProjectDate(startDate: string, endDate: string | null): string {
+  const start = new Date(startDate);
+  const startStr = start.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+
+  if (!endDate) {
+    return `${startStr} - Present`;
+  }
+
+  const end = new Date(endDate);
+  const endStr = end.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+  return `${startStr} - ${endStr}`;
 }
 
 /**
@@ -54,6 +68,11 @@ export function ProjectCard({ project, index = 0 }: ProjectCardProps) {
               <h3 className="text-lg font-semibold text-foreground group-hover:text-accent transition-colors duration-200 line-clamp-1">
                 {project.title}
               </h3>
+              {/* Project Timeline */}
+              <div className="flex items-center gap-1.5 mt-1.5 text-xs text-muted-foreground">
+                <FaCalendar size={10} />
+                <span>{formatProjectDate(project.start_date, project.end_date)}</span>
+              </div>
               <p className="mt-2 text-sm text-muted-foreground line-clamp-2 leading-relaxed">
                 {project.description}
               </p>

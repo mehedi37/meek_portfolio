@@ -56,7 +56,7 @@ export default async function HomePage() {
       <Hero profile={siteProfile} socialLinks={socialLinks} />
 
       {/* Skills Section - Technical expertise */}
-      <Skills categories={skillCategories} skills={skills} />
+      <Skills categories={skillCategories} skills={skills} profile={siteProfile} />
 
       {/* Projects Section - Featured work */}
       <Projects projects={projects} />

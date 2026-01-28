@@ -2,37 +2,31 @@
 
 import { motion, useInView } from "framer-motion";
 import { useRef, useState, useEffect } from "react";
-import { Chip, Card, Separator } from "@heroui/react";
-import { HiBriefcase, HiLocationMarker, HiCalendar, HiSparkles, HiDocumentText } from "react-icons/hi";
+import { Chip, Card, Separator, Link } from "@heroui/react";
+import { HiBriefcase, HiLocationMarker, HiCalendar, HiSparkles, HiDocumentText, HiExternalLink } from "react-icons/hi";
 import type { Experience as ExperienceType } from "@/lib/supabase/types";
+import Image from "next/image";
 
 interface ExperienceProps {
   className?: string;
   experiences?: ExperienceType[];
 }
 
-// Timeline item component with HeroUI Card
+// Timeline item component with HeroUI Card - Zig-zag layout for large screens
 function TimelineCard({
   experience,
   index,
-  isLast
+  isLast,
+  isEven
 }: {
   experience: ExperienceType;
   index: number;
   isLast: boolean;
+  isEven: boolean;
 }) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
-  const isCurrentRole = !experience.end_date;
-  const [lineHeight, setLineHeight] = useState(0);
-
-  useEffect(() => {
-    if (ref.current && isInView) {
-      const element = ref.current as HTMLDivElement;
-      const height = element.offsetHeight;
-      setLineHeight(height);
-    }
-  }, [isInView]);
+  const isCurrentRole = experience.is_current || !experience.end_date;
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return "Present";
@@ -45,23 +39,30 @@ function TimelineCard({
   return (
     <motion.div
       ref={ref}
-      className="relative pl-8 md:pl-0 md:grid md:grid-cols-[1fr_auto_1fr] md:gap-8"
+      className={`relative pl-8 lg:pl-0 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:gap-8 ${isEven ? "" : "lg:direction-rtl"}`}
       initial={{ opacity: 0, y: 50 }}
       animate={isInView ? { opacity: 1, y: 0 } : {}}
       transition={{ delay: index * 0.2, duration: 0.6, ease: "easeOut" }}
+      style={{ direction: "ltr" }}
     >
-      {/* Left side - Date (desktop) */}
-      <div className="hidden md:flex md:flex-col md:items-end md:justify-start md:pt-2">
-        <span className="text-sm font-medium text-accent">
-          {formatDate(experience.start_date)}
-        </span>
-        <span className="text-sm text-muted">
-          — {formatDate(experience.end_date)}
-        </span>
+      {/* Left side - Date (desktop) or Content for odd items */}
+      <div className={`hidden lg:flex lg:flex-col ${isEven ? "lg:items-end lg:justify-start" : "lg:items-start lg:order-3"} lg:pt-2`}>
+        {isEven ? (
+          <>
+            <span className="text-sm font-medium text-accent">
+              {formatDate(experience.start_date)}
+            </span>
+            <span className="text-sm text-muted">
+              — {formatDate(experience.end_date)}
+            </span>
+          </>
+        ) : (
+          <ExperienceContent experience={experience} isCurrentRole={isCurrentRole} />
+        )}
       </div>
 
       {/* Center - Timeline line and dot */}
-      <div className="absolute left-0 md:relative md:flex md:flex-col md:items-center">
+      <div className="absolute left-0 lg:relative lg:flex lg:flex-col lg:items-center lg:order-2">
         {/* Dot */}
         <motion.div
           className={`relative w-4 h-4 rounded-full border-2 z-10 ${
@@ -152,73 +153,130 @@ function TimelineCard({
         )}
       </div>
 
-      {/* Right side - Content */}
-      <div className="pb-12">
+      {/* Right side - Content for even items, Date for odd items */}
+      <div className={`pb-12 ${isEven ? "lg:order-3" : "lg:order-1 lg:flex lg:flex-col lg:items-end"}`}>
         {/* Mobile date */}
-        <div className="md:hidden flex items-center gap-2 text-sm text-muted mb-3">
+        <div className="lg:hidden flex items-center gap-2 text-sm text-muted mb-3">
           <HiCalendar className="w-4 h-4" />
           <span>{formatDate(experience.start_date)} — {formatDate(experience.end_date)}</span>
         </div>
 
-        {/* Card */}
-        <Card variant="default" className="p-6 hover:scale-[1.02] transition-transform group">
-          <Card.Content className="space-y-4 p-0">
-            {/* Current role badge */}
-            {isCurrentRole && (
-              <Chip color="success" variant="soft" size="sm" className="gap-1">
-                <HiSparkles className="w-3 h-3" />
-                Current Role
-              </Chip>
-            )}
+        {isEven ? (
+          <ExperienceContent experience={experience} isCurrentRole={isCurrentRole} />
+        ) : (
+          <div className="hidden lg:block">
+            <span className="text-sm font-medium text-accent">
+              {formatDate(experience.start_date)}
+            </span>
+            <span className="text-sm text-muted">
+              {" "}— {formatDate(experience.end_date)}
+            </span>
+          </div>
+        )}
 
-            {/* Position & Company */}
-            <div>
-              <h3 className="text-xl font-semibold mb-1 group-hover:text-accent transition-colors">
-                {experience.position}
-              </h3>
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
-                <span className="flex items-center gap-1.5">
-                  <HiBriefcase className="w-4 h-4 text-accent" />
-                  {experience.company}
-                </span>
-                {experience.location && (
-                  <span className="flex items-center gap-1.5">
-                    <HiLocationMarker className="w-4 h-4 text-accent" />
-                    {experience.location}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Description */}
-            <p className="text-muted text-sm leading-relaxed">
-              {experience.description}
-            </p>
-
-            {/* Technologies */}
-            {experience.technologies && experience.technologies.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {experience.technologies.map((tech) => (
-                  <Chip key={tech} variant="soft" size="sm">
-                    {tech}
-                  </Chip>
-                ))}
-              </div>
-            )}
-          </Card.Content>
-        </Card>
+        {/* Mobile: Always show content */}
+        <div className="lg:hidden">
+          <ExperienceContent experience={experience} isCurrentRole={isCurrentRole} />
+        </div>
       </div>
     </motion.div>
   );
 }
 
+// Extracted content component for reuse
+function ExperienceContent({ experience, isCurrentRole }: { experience: ExperienceType; isCurrentRole: boolean }) {
+  return (
+    <Card variant="default" className="p-6 hover:scale-[1.02] transition-transform group w-full">
+      <Card.Content className="space-y-4 p-0">
+        {/* Current role badge */}
+        {isCurrentRole && (
+          <Chip color="success" variant="soft" size="sm" className="gap-1">
+            <HiSparkles className="w-3 h-3" />
+            Current Role
+          </Chip>
+        )}
+
+        {/* Company Logo & Info */}
+        <div className="flex items-start gap-4">
+          {experience.company_logo && (
+            <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-default/50 flex-shrink-0 border border-separator">
+              <Image
+                src={experience.company_logo}
+                alt={`${experience.company} logo`}
+                fill
+                className="object-contain p-2"
+              />
+            </div>
+          )}
+          <div className="flex-1 min-w-0">
+            <h3 className="text-xl font-semibold mb-1 group-hover:text-accent transition-colors">
+              {experience.position}
+            </h3>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
+              <span className="flex items-center gap-1.5">
+                <HiBriefcase className="w-4 h-4 text-accent" />
+                {experience.company_url ? (
+                  <Link
+                    href={experience.company_url}
+                    target="_blank"
+                    className="hover:text-accent transition-colors inline-flex items-center gap-1"
+                  >
+                    {experience.company}
+                    <HiExternalLink className="w-3 h-3" />
+                  </Link>
+                ) : (
+                  experience.company
+                )}
+              </span>
+              {experience.location && (
+                <span className="flex items-center gap-1.5">
+                  <HiLocationMarker className="w-4 h-4 text-accent" />
+                  {experience.location}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <Separator />
+
+        {/* Description */}
+        <p className="text-muted text-sm leading-relaxed">
+          {experience.description}
+        </p>
+
+        {/* Technologies */}
+        {experience.technologies && experience.technologies.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {experience.technologies.map((tech) => (
+              <Chip key={tech} variant="soft" size="sm">
+                {tech}
+              </Chip>
+            ))}
+          </div>
+        )}
+      </Card.Content>
+    </Card>
+  );
+}
+
 /**
- * Experience Section - Timeline with HeroUI Cards
+ * Experience Section - Timeline with HeroUI Cards (Zig-zag layout)
+ * Current roles are always shown first
  */
 export function Experience({ className = "", experiences = [] }: ExperienceProps) {
-  const hasExperiences = experiences.length > 0;
+  // Sort experiences: current roles first, then by start_date descending
+  const sortedExperiences = [...experiences].sort((a, b) => {
+    // Current roles first
+    const aIsCurrent = a.is_current || !a.end_date;
+    const bIsCurrent = b.is_current || !b.end_date;
+    if (aIsCurrent && !bIsCurrent) return -1;
+    if (!aIsCurrent && bIsCurrent) return 1;
+    // Then by start_date descending
+    return new Date(b.start_date).getTime() - new Date(a.start_date).getTime();
+  });
+
+  const hasExperiences = sortedExperiences.length > 0;
 
   return (
     <section id="experience" className={`relative py-24 lg:py-32 overflow-hidden ${className}`}>
@@ -246,12 +304,13 @@ export function Experience({ className = "", experiences = [] }: ExperienceProps
         {hasExperiences ? (
           /* Timeline */
           <div className="relative">
-            {experiences.map((exp, index) => (
+            {sortedExperiences.map((exp, index) => (
               <TimelineCard
                 key={exp.id}
                 experience={exp}
                 index={index}
-                isLast={index === experiences.length - 1}
+                isLast={index === sortedExperiences.length - 1}
+                isEven={index % 2 === 0}
               />
             ))}
           </div>

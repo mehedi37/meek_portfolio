@@ -158,6 +158,7 @@ export async function getFeaturedSkills(): Promise<Skill[]> {
 
 /**
  * Fetch all active projects
+ * Sorted by start_date descending for timeline display
  */
 export async function getProjects(limit?: number): Promise<Project[]> {
   const supabase = await createClient();
@@ -165,6 +166,7 @@ export async function getProjects(limit?: number): Promise<Project[]> {
     .from("projects")
     .select("*")
     .eq("is_active", true)
+    .order("start_date", { ascending: false })
     .order("sort_order", { ascending: true });
 
   if (limit) {
@@ -261,6 +263,7 @@ export async function getExperiences(): Promise<Experience[]> {
 
 /**
  * Fetch all active certifications
+ * Ordered by date descending (newest first), then by sort_order
  */
 export async function getCertifications(): Promise<Certification[]> {
   const supabase = await createClient();
@@ -268,7 +271,8 @@ export async function getCertifications(): Promise<Certification[]> {
     .from("certifications")
     .select("*")
     .eq("is_active", true)
-    .order("date", { ascending: false });
+    .order("date", { ascending: false })
+    .order("sort_order", { ascending: true });
 
   if (error) {
     console.error("Error fetching certifications:", error);

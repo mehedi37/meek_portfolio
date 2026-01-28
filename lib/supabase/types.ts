@@ -31,6 +31,7 @@ export type Database = {
           status_color: string | null;
           years_experience: number | null;
           completed_projects: number | null;
+          happy_clients: number | null;
           created_at: string | null;
           updated_at: string | null;
         };
@@ -49,6 +50,7 @@ export type Database = {
           status_color?: string | null;
           years_experience?: number | null;
           completed_projects?: number | null;
+          happy_clients?: number | null;
           created_at?: string | null;
           updated_at?: string | null;
         };
@@ -67,6 +69,7 @@ export type Database = {
           status_color?: string | null;
           years_experience?: number | null;
           completed_projects?: number | null;
+          happy_clients?: number | null;
           created_at?: string | null;
           updated_at?: string | null;
         };
@@ -199,6 +202,8 @@ export type Database = {
           featured: boolean | null;
           is_active: boolean | null;
           sort_order: number | null;
+          start_date: string;
+          end_date: string | null;
           created_at: string | null;
           updated_at: string | null;
         };
@@ -217,6 +222,8 @@ export type Database = {
           featured?: boolean | null;
           is_active?: boolean | null;
           sort_order?: number | null;
+          start_date: string;
+          end_date?: string | null;
           created_at?: string | null;
           updated_at?: string | null;
         };
@@ -235,6 +242,8 @@ export type Database = {
           featured?: boolean | null;
           is_active?: boolean | null;
           sort_order?: number | null;
+          start_date?: string;
+          end_date?: string | null;
           created_at?: string | null;
           updated_at?: string | null;
         };
