@@ -306,7 +306,7 @@ export default function ProfilePage() {
               }
             >
               <Label>Tagline / Professional Title</Label>
-              <Input placeholder="e.g., Full Stack Developer" />
+              <Input placeholder="e.g., Software Engineer" />
             </TextField>
 
             <TextField

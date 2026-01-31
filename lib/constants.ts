@@ -5,7 +5,7 @@ export const siteConfig: SiteConfig = {
   name: process.env.NEXT_PUBLIC_SITE_NAME || "Portfolio",
   title: `Portfolio | ${process.env.NEXT_PUBLIC_SITE_NAME || "Developer"}`,
   description:
-    "Full Stack Developer specializing in React, Next.js, TypeScript, and modern web technologies.",
+    "Software Engineer specializing in React, Next.js, TypeScript, and modern web technologies.",
   url: process.env.NEXT_PUBLIC_SITE_URL || "https://yoursite.com",
   ogImage: "/og-image.png",
   links: {},

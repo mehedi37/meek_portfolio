@@ -274,7 +274,7 @@ ON CONFLICT (name) DO NOTHING;
 -- Insert default site_profile (update with your info)
 -- =====================================================
 INSERT INTO public.site_profile (full_name, short_name, tagline, about_me, email, location, status)
-SELECT 'Your Name', 'YN', 'Full Stack Developer',
+SELECT 'Your Name', 'YN', 'Software Engineer',
   'I am a passionate developer who loves building modern web applications.',
   'your.email@example.com', 'Your City, Country', 'Available for hire'
 WHERE NOT EXISTS (SELECT 1 FROM public.site_profile);

@@ -58,7 +58,7 @@ export function FooterClient({ className = "", profile, socialLinks }: FooterCli
                   <span className="text-[var(--muted-foreground)]">.dev</span>
                 </span>
                 <span className="text-xs text-[var(--muted-foreground)]">
-                  {profile?.tagline || "Full Stack Developer"}
+                  {profile?.tagline || "Software Engineer"}
                 </span>
               </div>
             </Link>

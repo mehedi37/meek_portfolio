@@ -29,7 +29,7 @@ const STORAGE_KEY = "admin_site_settings";
 
 const defaultSettings: SiteSettings = {
   name: "Mehedi Hasan Maruf",
-  title: "Full Stack Developer",
+  title: "Software Engineer",
   description: "Passionate developer building modern web applications",
   email: "contact@example.com",
   github: "https://github.com/username",
@@ -123,7 +123,7 @@ export default function SettingsPage() {
             onChange={(value) => setSettings((prev) => ({ ...prev, title: value }))}
           >
             <Label>Professional Title</Label>
-            <Input placeholder="e.g., Full Stack Developer" />
+            <Input placeholder="e.g., Software Engineer" />
           </TextField>
         </div>
 

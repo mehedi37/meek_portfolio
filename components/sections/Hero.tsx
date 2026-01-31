@@ -178,7 +178,7 @@ export function Hero({ className = "", profile, socialLinks = [] }: HeroProps) {
   // console.log("Profile data in Hero:", profile);
   const name = profile?.full_name || "Your Name";
   const shortName = profile?.short_name || "YN";
-  const tagline = profile?.tagline || "Full Stack Developer";
+  const tagline = profile?.tagline || "Software Engineer";
   const aboutMe =
     profile?.about_me ||
     "I craft beautiful, performant digital experiences that blend creativity with clean code.";
