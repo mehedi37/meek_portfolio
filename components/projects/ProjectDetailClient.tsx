@@ -6,7 +6,7 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { FadeInSection } from "@/components/animations";
 import { Container } from "@/components/layout/Container";
-import { Button } from "@heroui/react";
+import { Button, Chip } from "@heroui/react";
 import { FaGithub, FaExternalLinkAlt } from "react-icons/fa";
 import { HiVideoCamera, HiPhotograph, HiX } from "react-icons/hi";
 import type { Project } from "@/lib/supabase/types";
@@ -213,12 +213,15 @@ export function ProjectDetailClient({ project }: ProjectDetailClientProps) {
                   <h3 className="font-semibold mb-4">Tech Stack</h3>
                   <div className="flex flex-wrap gap-2">
                     {project.tech_stack.map((tech) => (
-                      <span
+                      <Chip
+                        color="accent"
+                        size="sm"
+                        variant="soft"
                         key={tech}
-                        className="px-3 py-1 text-sm bg-surface-secondary rounded-full"
+                        className="px-3 py-1 text-sm bg-surface-accent rounded-full"
                       >
                         {tech}
-                      </span>
+                      </Chip>
                     ))}
                   </div>
                 </div>

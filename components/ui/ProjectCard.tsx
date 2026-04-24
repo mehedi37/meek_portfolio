@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { Project } from "@/lib/supabase/types";
 import { MediaThumbnail } from "./MediaDisplay";
 import { FaGithub, FaExternalLinkAlt, FaStar, FaCalendar } from "react-icons/fa";
+import { Chip } from '@heroui/react';
 
 interface ProjectCardProps {
   project: Project;
@@ -81,12 +82,14 @@ export function ProjectCard({ project, index = 0 }: ProjectCardProps) {
             {/* Tech Stack */}
             <div className="flex flex-wrap gap-1.5">
               {(project.tech_stack || []).slice(0, 4).map((tech) => (
-                <span
+                <Chip
                   key={tech}
-                  className="px-2.5 py-1 text-xs font-medium rounded-md bg-secondary/80 text-foreground/70"
+                  size="md"
+                  variant="soft"
+                  color="success"
                 >
                   {tech}
-                </span>
+                </Chip>
               ))}
               {(project.tech_stack || []).length > 4 && (
                 <span className="px-2.5 py-1 text-xs font-medium rounded-md bg-secondary/80 text-foreground/70">
