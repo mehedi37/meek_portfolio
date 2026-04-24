@@ -3,91 +3,11 @@
 import Link from "next/link";
 import Image from "next/image";
 import { FadeInSection } from "@/components/animations";
+import { VideoPlayer } from "@/components/ui/MediaDisplay";
 import { formatDate } from "@/lib/utils";
 import { FaCalendar, FaClock, FaTwitter, FaLinkedin } from "react-icons/fa";
 import { HiVideoCamera } from "react-icons/hi";
 import type { BlogPost } from "@/lib/supabase/types";
-
-// ============================================================================
-// Video URL Detection Utilities
-// ============================================================================
-
-function isYouTubeUrl(url: string): boolean {
-  return /(?:youtube\.com|youtu\.be)/i.test(url);
-}
-
-function isVimeoUrl(url: string): boolean {
-  return /vimeo\.com/i.test(url);
-}
-
-function getYouTubeEmbedUrl(url: string): string {
-  const videoIdMatch = url.match(
-    /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
-  );
-  if (videoIdMatch) {
-    return `https://www.youtube.com/embed/${videoIdMatch[1]}`;
-  }
-  return url;
-}
-
-function getVimeoEmbedUrl(url: string): string {
-  const videoIdMatch = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
-  if (videoIdMatch) {
-    return `https://player.vimeo.com/video/${videoIdMatch[1]}`;
-  }
-  return url;
-}
-
-// ============================================================================
-// Video Player Component
-// ============================================================================
-
-interface VideoPlayerProps {
-  url: string;
-  poster?: string;
-  title: string;
-}
-
-function VideoPlayer({ url, poster, title }: VideoPlayerProps) {
-  if (isYouTubeUrl(url)) {
-    return (
-      <iframe
-        src={getYouTubeEmbedUrl(url)}
-        title={title}
-        className="absolute inset-0 w-full h-full"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowFullScreen
-      />
-    );
-  }
-
-  if (isVimeoUrl(url)) {
-    return (
-      <iframe
-        src={getVimeoEmbedUrl(url)}
-        title={title}
-        className="absolute inset-0 w-full h-full"
-        allow="autoplay; fullscreen; picture-in-picture"
-        allowFullScreen
-      />
-    );
-  }
-
-  // Direct video file - use native HTML5 video
-  return (
-    <video
-      controls
-      preload="metadata"
-      poster={poster}
-      className="absolute inset-0 w-full h-full object-contain bg-black"
-      aria-label={`Video: ${title}`}
-    >
-      <source src={url} type="video/mp4" />
-      <source src={url} type="video/webm" />
-      Your browser does not support the video tag.
-    </video>
-  );
-}
 
 // ============================================================================
 // Main Component
@@ -183,13 +103,13 @@ export function BlogDetailClient({ post, shareUrl, shareTitle }: BlogDetailClien
         <FadeInSection>
           <div className="mb-12">
             {hasVideo ? (
-              <div className="relative aspect-video rounded-xl overflow-hidden shadow-xl bg-black">
-                <VideoPlayer
-                  url={post.video_url!}
-                  poster={post.cover_image || undefined}
-                  title={post.title}
-                />
-              </div>
+              <VideoPlayer
+                url={post.video_url!}
+                thumbnail={post.cover_image || undefined}
+                title={post.title}
+                className="rounded-xl shadow-xl"
+                aspectRatio="video"
+              />
             ) : hasImage ? (
               <div className="relative aspect-video rounded-xl overflow-hidden shadow-xl">
                 <Image
@@ -200,7 +120,7 @@ export function BlogDetailClient({ post, shareUrl, shareTitle }: BlogDetailClien
                   priority
                   sizes="(max-width: 768px) 100vw, 800px"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-background/20 to-transparent" />
+                <div className="absolute inset-0 bg-linear-to-t from-background/50 to-transparent" />
               </div>
             ) : null}
           </div>
