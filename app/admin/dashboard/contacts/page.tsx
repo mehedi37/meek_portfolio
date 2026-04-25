@@ -17,7 +17,6 @@ import {
   FaEye,
   FaSearch,
   FaCheckCircle,
-  FaExclamationTriangle,
   FaSync,
 } from "react-icons/fa";
 import { createClient } from "@/lib/supabase/client";
@@ -158,57 +157,6 @@ export default function ContactsPage() {
           )}
         </Button>
       </div>
-
-      {/* Email Configuration Warning */}
-      {/* <Card className="p-4 border-warning/50 bg-warning/5">
-        <div className="flex items-start gap-3">
-          <FaExclamationTriangle className="w-5 h-5 text-warning mt-0.5" />
-          <div className="flex-1">
-            <h3 className="font-semibold text-warning mb-1">
-              Email Notifications Not Configured
-            </h3>
-            <p className="text-sm text-muted mb-3">
-              To receive email notifications when someone contacts you, you need to:
-            </p>
-            <ol className="text-sm text-muted space-y-2 list-decimal list-inside">
-              <li>
-                <strong>Install Resend package:</strong>{" "}
-                <code className="bg-surface px-2 py-1 rounded text-xs">
-                  npm install resend
-                </code>
-              </li>
-              <li>
-                <strong>Verify your domain</strong> in the{" "}
-                <a
-                  href="https://resend.com/domains"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-accent hover:underline"
-                >
-                  Resend Dashboard
-                </a>{" "}
-                (add DNS records)
-              </li>
-              <li>
-                <strong>Update the "from" email</strong> in{" "}
-                <code className="bg-surface px-2 py-1 rounded text-xs">
-                  app/api/contact/route.ts
-                </code>{" "}
-                to use your verified domain (e.g., noreply@yourdomain.com)
-              </li>
-              <li>
-                <strong>Uncomment the email function</strong> in the contact
-                API route
-              </li>
-            </ol>
-            <p className="text-sm text-muted mt-3">
-              <strong>Note:</strong> Resend requires a verified domain to send
-              emails. You cannot use random email addresses. Free tier includes
-              100 emails/day.
-            </p>
-          </div>
-        </div>
-      </Card> */}
 
       {/* Search */}
       <Card className="p-4">

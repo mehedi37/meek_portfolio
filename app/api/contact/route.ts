@@ -91,8 +91,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Optionally send email notification
-    // await sendEmailNotification(body);
+    // Send email notification
+    await sendEmailNotification(body);
 
     return NextResponse.json(
       { message: "Thank you! Your message has been sent successfully." },
@@ -107,8 +107,15 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Optional: Email notification using Resend
-/*
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 async function sendEmailNotification(data: ContactFormData) {
   if (!process.env.RESEND_API_KEY || !process.env.CONTACT_EMAIL) {
     return;
@@ -117,18 +124,23 @@ async function sendEmailNotification(data: ContactFormData) {
   const { Resend } = await import("resend");
   const resend = new Resend(process.env.RESEND_API_KEY);
 
+  const name = escapeHtml(data.name);
+  const email = escapeHtml(data.email);
+  const subject = escapeHtml(data.subject || "N/A");
+  const message = escapeHtml(data.message).replace(/\n/g, "<br>");
+
   await resend.emails.send({
-    from: "Portfolio <noreply@yourdomain.com>",
+    from: "Portfolio <noreply@mehedi-hasan-maruf.me>",
     to: process.env.CONTACT_EMAIL,
+    replyTo: data.email,
     subject: `New Contact: ${data.subject || "No Subject"}`,
     html: `
       <h2>New Contact Form Submission</h2>
-      <p><strong>Name:</strong> ${data.name}</p>
-      <p><strong>Email:</strong> ${data.email}</p>
-      <p><strong>Subject:</strong> ${data.subject || "N/A"}</p>
+      <p><strong>Name:</strong> ${name}</p>
+      <p><strong>Email:</strong> <a href="mailto:${email}">${email}</a></p>
+      <p><strong>Subject:</strong> ${subject}</p>
       <p><strong>Message:</strong></p>
-      <p>${data.message}</p>
+      <p>${message}</p>
     `,
   });
 }
-*/
