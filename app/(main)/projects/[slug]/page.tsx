@@ -33,8 +33,8 @@ export async function generateStaticParams() {
   return slugs.map((slug) => ({ slug }));
 }
 
-// Force dynamic rendering to avoid build-time param access issues
-export const dynamic = 'force-dynamic';
+// Revalidate every 30 minutes, matching the projects list page
+export const revalidate = 1800;
 
 export default async function ProjectPage({ params }: ProjectPageProps) {
   const { slug } = await params;

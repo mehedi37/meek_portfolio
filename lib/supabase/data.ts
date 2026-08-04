@@ -12,6 +12,7 @@ import type {
   SkillWithCategory,
   Project,
   Experience,
+  Education,
   Certification,
   BlogPost,
   Contact,
@@ -255,6 +256,25 @@ export async function getExperiences(): Promise<Experience[]> {
 
   if (error) {
     console.error("Error fetching experiences:", error);
+    return [];
+  }
+
+  return data || [];
+}
+
+/**
+ * Fetch all education entries
+ */
+export async function getEducation(): Promise<Education[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("education")
+    .select("*")
+    .order("start_date", { ascending: false })
+    .order("sort_order", { ascending: true });
+
+  if (error) {
+    console.error("Error fetching education:", error);
     return [];
   }
 

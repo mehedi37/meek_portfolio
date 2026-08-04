@@ -16,10 +16,31 @@ export const navItems: NavItem[] = [
   { name: "Skills", href: "#skills" },
   { name: "Projects", href: "#projects" },
   { name: "Experience", href: "#experience" },
+  { name: "Education", href: "#education" },
   { name: "Certifications", href: "#certifications" },
-  { name: "Blog", href: "#blog" },
+  { name: "Research", href: "#research" },
   // { name: "Contact", href: "#contact" },
 ];
+
+// Single source of truth for homepage sections in scroll order - used for
+// both scroll-spy active-section tracking (Navbar) and the floating dock nav
+// (FloatingNavDots), which previously kept two separately hardcoded, already
+// out-of-sync copies of this list.
+export const HOME_SECTIONS = [
+  { id: "hero", label: "Home" },
+  { id: "skills", label: "Skills" },
+  { id: "projects", label: "Projects" },
+  { id: "experience", label: "Experience" },
+  { id: "education", label: "Education" },
+  { id: "certifications", label: "Certs" },
+  { id: "research", label: "Research" },
+  { id: "contact", label: "Contact" },
+] as const;
+
+// Stable id-only array, computed once - passing HOME_SECTIONS.map(s => s.id)
+// inline at each call site would create a new array every render, which
+// would defeat useActiveSection's effect dependency check.
+export const HOME_SECTION_IDS = HOME_SECTIONS.map((s) => s.id);
 
 // Animation timing constants
 export const ANIMATION_DURATION = {
@@ -27,14 +48,6 @@ export const ANIMATION_DURATION = {
   normal: 0.4,
   slow: 0.6,
   verySlow: 0.8,
-} as const;
-
-// Scroll thresholds for Growing Boy stages
-export const SCROLL_STAGES = {
-  child: { start: 0, end: 0.25 },
-  teen: { start: 0.25, end: 0.5 },
-  youngAdult: { start: 0.5, end: 0.75 },
-  professional: { start: 0.75, end: 1 },
 } as const;
 
 // Breakpoints matching Tailwind

@@ -19,7 +19,7 @@ export async function generateMetadata({
   }
 
   return {
-    title: `${post.title} | Blog`,
+    title: `${post.title} | Research`,
     description: post.excerpt ?? undefined,
     openGraph: {
       title: post.title,
@@ -56,7 +56,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   }
 
   // Get share URLs
-  const shareUrl = encodeURIComponent(`${process.env.NEXT_PUBLIC_SITE_URL || ''}/blog/${slug}`);
+  const shareUrl = encodeURIComponent(`${process.env.NEXT_PUBLIC_SITE_URL || ''}/research/${slug}`);
   const shareTitle = encodeURIComponent(post.title);
 
   return (

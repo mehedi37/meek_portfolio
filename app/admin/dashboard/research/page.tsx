@@ -30,6 +30,7 @@ const defaultPost: Partial<BlogPost> = {
   content: "",
   cover_image: "",
   video_url: "",
+  venue: "",
   tags: [],
   author: "",
   published: false,
@@ -142,6 +143,7 @@ export default function BlogManagementPage() {
             content: editingPost.content,
             cover_image: editingPost.cover_image || null,
             video_url: editingPost.video_url || null,
+            venue: editingPost.venue || null,
             tags: editingPost.tags || [],
             author: editingPost.author || null,
             published: editingPost.published,
@@ -162,6 +164,7 @@ export default function BlogManagementPage() {
           content: editingPost.content,
           cover_image: editingPost.cover_image || null,
           video_url: editingPost.video_url || null,
+          venue: editingPost.venue || null,
           tags: editingPost.tags || [],
           author: editingPost.author || null,
           published: editingPost.published || false,
@@ -215,14 +218,14 @@ export default function BlogManagementPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Blog Posts</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">Research</h1>
           <p className="text-muted mt-1">
-            Create and manage your blog content.
+            Create and manage your research entries.
           </p>
         </div>
         <Button onPress={() => openModal()}>
           <FaPlus className="w-4 h-4" />
-          New Post
+          New Entry
         </Button>
       </div>
 
@@ -236,13 +239,13 @@ export default function BlogManagementPage() {
           <div className="w-16 h-16 rounded-full bg-muted/20 mx-auto flex items-center justify-center mb-4">
             <FaBlog className="w-6 h-6 text-muted" />
           </div>
-          <h3 className="text-lg font-semibold mb-2">No blog posts yet</h3>
+          <h3 className="text-lg font-semibold mb-2">No research entries yet</h3>
           <p className="text-muted mb-4">
-            Start writing your first blog post to share your knowledge.
+            Add your first research entry or paper write-up.
           </p>
           <Button onPress={() => openModal()}>
             <FaPlus className="w-4 h-4" />
-            Create Post
+            Create Entry
           </Button>
         </Card>
       ) : (
@@ -332,10 +335,10 @@ export default function BlogManagementPage() {
                         <div className="flex gap-1 shrink-0">
                           {post.published && (
                             <Link
-                              href={`/blog/${post.slug}`}
+                              href={`/research/${post.slug}`}
                               target="_blank"
                               className="p-2 text-muted hover:text-foreground hover:bg-surface-secondary rounded-lg transition-colors"
-                              title="View post"
+                              title="View entry"
                             >
                               <FaEye className="w-4 h-4" />
                             </Link>
@@ -402,7 +405,7 @@ export default function BlogManagementPage() {
                   }
                 >
                   <Label>Post Title</Label>
-                  <Input placeholder="e.g., How to Build a REST API" />
+                  <Input placeholder="e.g., TRACE: Neuro-Symbolic Curriculum Bottleneck Detection" />
                   <FieldError />
                 </TextField>
 
@@ -415,9 +418,21 @@ export default function BlogManagementPage() {
                   }
                 >
                   <Label>URL Slug</Label>
-                  <Input placeholder="how-to-build-a-rest-api" />
-                  <Description>Used in the blog post URL</Description>
+                  <Input placeholder="trace-curriculum-bottleneck-detection" />
+                  <Description>Used in the research entry URL</Description>
                   <FieldError />
+                </TextField>
+
+                <TextField
+                  name="venue"
+                  value={editingPost?.venue || ""}
+                  onChange={(value) =>
+                    setEditingPost((prev) => prev ? ({ ...prev, venue: value }) : prev)
+                  }
+                >
+                  <Label>Venue / Status (optional)</Label>
+                  <Input placeholder="e.g., Under Submission — IEEE ICDM 2026 (Applied Track)" />
+                  <Description>Shown as a subtitle under the title</Description>
                 </TextField>
 
                 <TextField

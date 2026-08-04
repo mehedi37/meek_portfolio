@@ -6,7 +6,6 @@ import { Navbar } from "@/components/ui/Navbar";
 import { FloatingNavWrapper } from "@/components/ui/FloatingNavWrapper";
 import { StickyBackButton } from "@/components/ui/StickyBackButton";
 import {
-  ScrollProgress,
   CursorGlow,
   FloatingShapes,
   GradientOrbs,
@@ -30,9 +29,9 @@ function getBackButtonConfig(pathname: string): { href: string; label: string } 
     return { href: "/projects", label: "Back to Projects" };
   }
 
-  // Blog detail pages
-  if (pathname.startsWith("/blog/") && pathname !== "/blog") {
-    return { href: "/blog", label: "Back to Blog" };
+  // Research detail pages
+  if (pathname.startsWith("/research/") && pathname !== "/research") {
+    return { href: "/research", label: "Back to Research" };
   }
 
   // Projects listing page
@@ -40,8 +39,8 @@ function getBackButtonConfig(pathname: string): { href: string; label: string } 
     return { href: "/", label: "Back to Home" };
   }
 
-  // Blog listing page
-  if (pathname === "/blog") {
+  // Research listing page
+  if (pathname === "/research") {
     return { href: "/", label: "Back to Home" };
   }
 
@@ -71,9 +70,6 @@ export function ClientLayoutWrapper({ children }: ClientLayoutWrapperProps) {
       {/* Background visual effects - fixed position, lowest z-index */}
       <GradientOrbs />
       <FloatingShapes />
-
-      {/* Scroll progress indicator - always visible */}
-      <ScrollProgress />
 
       {/* Interactive cursor glow effect */}
       <CursorGlow />

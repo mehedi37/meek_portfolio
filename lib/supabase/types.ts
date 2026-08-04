@@ -303,6 +303,61 @@ export type Database = {
         Relationships: [];
       };
 
+      education: {
+        Row: {
+          id: string;
+          institution: string;
+          degree: string;
+          field_of_study: string | null;
+          location: string | null;
+          start_date: string;
+          end_date: string | null;
+          is_current: boolean | null;
+          description: string | null;
+          gpa: string | null;
+          institution_logo: string | null;
+          institution_url: string | null;
+          sort_order: number | null;
+          created_at: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          institution: string;
+          degree: string;
+          field_of_study?: string | null;
+          location?: string | null;
+          start_date: string;
+          end_date?: string | null;
+          is_current?: boolean | null;
+          description?: string | null;
+          gpa?: string | null;
+          institution_logo?: string | null;
+          institution_url?: string | null;
+          sort_order?: number | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          institution?: string;
+          degree?: string;
+          field_of_study?: string | null;
+          location?: string | null;
+          start_date?: string;
+          end_date?: string | null;
+          is_current?: boolean | null;
+          description?: string | null;
+          gpa?: string | null;
+          institution_logo?: string | null;
+          institution_url?: string | null;
+          sort_order?: number | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Relationships: [];
+      };
+
       // Certifications (updated with new fields)
       certifications: {
         Row: {
@@ -358,6 +413,7 @@ export type Database = {
           published_at: string | null;
           reading_time: number | null;
           sort_order: number | null;
+          venue: string | null;
           created_at: string | null;
           updated_at: string | null;
         };
@@ -376,6 +432,7 @@ export type Database = {
           published_at?: string | null;
           reading_time?: number | null;
           sort_order?: number | null;
+          venue?: string | null;
           created_at?: string | null;
           updated_at?: string | null;
         };
@@ -394,6 +451,7 @@ export type Database = {
           published_at?: string | null;
           reading_time?: number | null;
           sort_order?: number | null;
+          venue?: string | null;
           created_at?: string | null;
           updated_at?: string | null;
         };
@@ -486,6 +544,10 @@ export type ProjectUpdate = TablesUpdate<"projects">;
 export type Experience = Tables<"experiences">;
 export type ExperienceInsert = TablesInsert<"experiences">;
 export type ExperienceUpdate = TablesUpdate<"experiences">;
+
+export type Education = Tables<"education">;
+export type EducationInsert = TablesInsert<"education">;
+export type EducationUpdate = TablesUpdate<"education">;
 
 export type Certification = Tables<"certifications">;
 export type CertificationInsert = TablesInsert<"certifications">;

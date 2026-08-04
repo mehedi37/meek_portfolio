@@ -11,19 +11,17 @@
    ========================================================================== */
 
 :root {
-  /* Primary - Electric Violet */
+  /* Primary - Electric Violet (main interactive/brand accent) */
   --color-primary: oklch(0.65 0.25 285);
   --color-primary-light: oklch(0.75 0.2 285);
   --color-primary-dark: oklch(0.5 0.28 285);
   --color-primary-glow: oklch(0.65 0.25 285 / 0.4);
 
-  /* Secondary - Cyber Cyan */
-  --color-secondary: oklch(0.75 0.15 195);
-  --color-secondary-light: oklch(0.85 0.12 195);
-
-  /* Tertiary - Neon Magenta */
-  --color-tertiary: oklch(0.7 0.25 330);
-  --color-tertiary-glow: oklch(0.7 0.25 330 / 0.4);
+  /* Secondary accent - warm gold, pulled from the paper theme's own hue family.
+     Reserved for secondary CTAs / featured badges - never used at equal visual
+     weight alongside primary in the same element. */
+  --color-accent-2: oklch(0.78 0.14 80);
+  --color-accent-2-foreground: oklch(0.2 0.02 80);
 
   /* Typography */
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
@@ -51,8 +49,13 @@
   --overlay: oklch(0.16 0.025 280 / 0.95);
   --overlay-foreground: var(--foreground);
   --muted: oklch(0.55 0.02 280);
+  --muted-foreground: oklch(0.62 0.02 280);
   --default: oklch(0.2 0.02 280 / 0.85);
   --default-foreground: var(--foreground);
+  --card: oklch(0.16 0.02 280);
+  --card-foreground: var(--foreground);
+  --secondary: oklch(0.22 0.02 280);
+  --secondary-foreground: var(--foreground);
   --accent: var(--color-primary);
   --accent-foreground: oklch(0.98 0 0);
   --success: oklch(0.72 0.2 145);
@@ -94,16 +97,21 @@
 
 [data-theme="light"],
 .light {
-  /* HeroUI semantic colors */
-  --background: oklch(0.98 0.005 280);
-  --foreground: oklch(0.15 0.02 280);
-  --surface: oklch(1 0 0 / 0.95);
+  /* HeroUI semantic colors - warm "paper" palette */
+  --background: oklch(0.97 0.015 75);
+  --foreground: oklch(0.27 0.025 55);
+  --surface: oklch(0.99 0.012 75 / 0.95);
   --surface-foreground: var(--foreground);
-  --overlay: oklch(1 0 0 / 0.98);
+  --overlay: oklch(0.99 0.01 75 / 0.98);
   --overlay-foreground: var(--foreground);
-  --muted: oklch(0.45 0.015 280);
-  --default: oklch(0.94 0.006 280);
+  --muted: oklch(0.48 0.025 60);
+  --muted-foreground: oklch(0.5 0.025 60);
+  --default: oklch(0.93 0.015 70);
   --default-foreground: var(--foreground);
+  --card: oklch(0.995 0.015 78);
+  --card-foreground: var(--foreground);
+  --secondary: oklch(0.92 0.015 70);
+  --secondary-foreground: var(--foreground);
   --accent: var(--color-primary);
   --accent-foreground: oklch(0.98 0 0);
   --success: oklch(0.55 0.18 145);
@@ -112,29 +120,29 @@
   --warning-foreground: oklch(0.15 0.02 75);
   --danger: oklch(0.55 0.22 25);
   --danger-foreground: oklch(0.98 0 0);
-  --border: oklch(0.85 0.01 280);
-  --separator: oklch(0.9 0.005 280);
+  --border: oklch(0.85 0.02 65);
+  --separator: oklch(0.89 0.015 65);
   --focus: var(--color-primary);
   --link: var(--color-primary-dark);
-  --scrollbar: oklch(0.8 0.01 280);
+  --scrollbar: oklch(0.78 0.02 65);
 
   /* Field styling */
-  --field-background: oklch(1 0 0);
+  --field-background: oklch(0.99 0.008 75);
   --field-foreground: var(--foreground);
-  --field-border: oklch(0.88 0.01 280);
+  --field-border: oklch(0.87 0.015 65);
 
   /* Shadows - softer for light mode */
-  --surface-shadow: 0 2px 8px oklch(0 0 0 / 0.06);
-  --overlay-shadow: 0 4px 16px oklch(0 0 0 / 0.08);
+  --surface-shadow: 0 2px 8px oklch(0.3 0.02 60 / 0.08);
+  --overlay-shadow: 0 4px 16px oklch(0.3 0.02 60 / 0.1);
 
   /* Custom design tokens */
-  --glass-bg: oklch(1 0 0 / 0.8);
-  --glass-border: oklch(0.85 0.01 280);
+  --glass-bg: oklch(0.99 0.01 75 / 0.8);
+  --glass-border: oklch(0.85 0.02 65);
   --gradient-hero: linear-gradient(
     135deg,
-    oklch(0.98 0.003 280) 0%,
-    oklch(0.96 0.01 285) 50%,
-    oklch(0.97 0.008 290) 100%
+    oklch(0.97 0.012 75) 0%,
+    oklch(0.955 0.02 80) 50%,
+    oklch(0.965 0.015 70) 100%
   );
 }
 
@@ -163,24 +171,6 @@ body {
   backdrop-filter: blur(12px);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-xl);
-}
-
-/* ==========================================================================
-   Gradient Text Utilities
-   ========================================================================== */
-
-.text-gradient-primary {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-tertiary) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-.text-gradient-secondary {
-  background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-primary) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
 }
 
 /* ==========================================================================

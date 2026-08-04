@@ -5,19 +5,20 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@heroui/react";
-import { navItems, siteConfig } from "@/lib/constants";
+import { navItems, siteConfig, HOME_SECTION_IDS } from "@/lib/constants";
 import { ThemeToggle } from "./ThemeToggle";
-import { useIsMobile, useScrollDirection } from "@/hooks";
+import { useIsMobile, useScrollDirection, useActiveSection } from "@/hooks";
 import {
   HiHome,
   HiLightningBolt,
   HiCollection,
   HiBriefcase,
-  HiNewspaper,
+  HiDocumentText,
   HiMail,
   HiMenu,
   HiX,
   HiAcademicCap,
+  HiBookOpen,
 } from "react-icons/hi";
 
 // Icon mapping for nav items
@@ -26,8 +27,9 @@ const navIcons: Record<string, React.ElementType> = {
   Skills: HiLightningBolt,
   Projects: HiCollection,
   Experience: HiBriefcase,
+  Education: HiBookOpen,
   Certifications: HiAcademicCap,
-  Blog: HiNewspaper,
+  Research: HiDocumentText,
   Contact: HiMail,
 };
 
@@ -41,43 +43,20 @@ interface NavbarProps {
  */
 export function Navbar({ className = "" }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [activeSection, setActiveSection] = useState("hero");
   const isMobile = useIsMobile();
   const pathname = usePathname();
-  const { scrollDirection } = useScrollDirection({ threshold: 10 });
+  const { scrollDirection, scrollY } = useScrollDirection({ threshold: 10 });
+  // Shared with FloatingNavDots instead of a second hand-rolled scroll
+  // listener - harmless off-homepage since the section elements just won't
+  // exist in the DOM there, matching the isHomePage guards below.
+  const activeSection = useActiveSection(HOME_SECTION_IDS, 100);
 
   // Check if we're on the home page
   const isHomePage = pathname === "/" || pathname === "";
+  const isScrolled = scrollY > 20;
 
   // Hide navbar on scroll down, show on scroll up
   const shouldHideNavbar = scrollDirection === "down" && isScrolled && !isOpen;
-
-  // Handle scroll effect
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-
-      // Only track active section on home page
-      if (!isHomePage) return;
-
-      // Determine active section
-      const sections = ["hero", "skills", "projects", "experience", "certifications", "blog", "contact"];
-      for (const section of sections.reverse()) {
-        const element = document.getElementById(section);
-        if (element) {
-          const rect = element.getBoundingClientRect();
-          if (rect.top <= 100) {
-            setActiveSection(section);
-            break;
-          }
-        }
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [isHomePage]);
 
   // Close mobile menu on escape
   useEffect(() => {

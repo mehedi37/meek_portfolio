@@ -189,7 +189,7 @@ export function BlogListClient({ posts }: BlogListClientProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
-            {filteredPosts.length} post{filteredPosts.length !== 1 ? "s" : ""}
+            {filteredPosts.length} entr{filteredPosts.length !== 1 ? "ies" : "y"}
           </motion.span>
         </div>
 
@@ -304,9 +304,9 @@ export function BlogListClient({ posts }: BlogListClientProps) {
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-accent/10 flex items-center justify-center">
               <FaNewspaper className="text-accent/50" size={24} />
             </div>
-            <h3 className="text-lg font-medium text-foreground mb-2">No posts found</h3>
+            <h3 className="text-lg font-medium text-foreground mb-2">No entries found</h3>
             <p className="text-muted-foreground mb-4">
-              Try adjusting your filters to see more posts.
+              Try adjusting your filters to see more entries.
             </p>
             <motion.button
               onClick={clearFilters}
@@ -365,7 +365,7 @@ function YearSection({ year, posts }: { year: number; posts: BlogPost[] }) {
             animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
             transition={{ delay: 0.5 }}
           >
-            {posts.length} post{posts.length !== 1 ? "s" : ""}
+            {posts.length} entr{posts.length !== 1 ? "ies" : "y"}
           </motion.span>
         </motion.div>
       </div>

@@ -42,28 +42,29 @@ export function ProjectCard({ project, index = 0 }: ProjectCardProps) {
       transition={{ delay: index * 0.1 }}
     >
       <div className="h-full rounded-2xl bg-card border border-border/50 overflow-hidden transition-all duration-300 hover:border-accent/30 hover:shadow-xl hover:shadow-accent/5">
-        {/* Media (Image/Video) - Hover to play */}
-        <div className="block relative">
-          <MediaThumbnail
-            image={project.image}
-            videoUrl={project.video_url}
-            alt={project.title}
-            className="h-48"
-          />
-
-          {/* Featured badge */}
-          {project.featured && (
-            <div className="absolute top-3 left-3 z-10">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-accent text-white rounded-full shadow-lg">
-                <FaStar size={10} />
-                Featured
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* Content - Click to navigate */}
+        {/* Media + Content share one Link so the whole card (including the
+            media thumbnail) is a single tap/click target - previously the
+            media block sat outside the Link and tapping it did nothing. */}
         <Link href={`/projects/${project.slug}`}>
+          <div className="block relative">
+            <MediaThumbnail
+              image={project.image}
+              videoUrl={project.video_url}
+              alt={project.title}
+              className="h-48"
+            />
+
+            {/* Featured badge */}
+            {project.featured && (
+              <div className="absolute top-3 left-3 z-10">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-accent2 text-accent2-foreground rounded-full shadow-lg">
+                  <FaStar size={10} />
+                  Featured
+                </span>
+              </div>
+            )}
+          </div>
+
           <div className="p-5 space-y-4 cursor-pointer">
             <div>
               <h3 className="text-lg font-semibold text-foreground group-hover:text-accent transition-colors duration-200 line-clamp-1">
@@ -114,7 +115,7 @@ export function ProjectCard({ project, index = 0 }: ProjectCardProps) {
                 href={project.live_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-sm font-medium text-foreground/70 hover:text-foreground transition-colors"
+                className="inline-flex items-center gap-2 text-sm font-medium text-foreground/70 hover:text-accent transition-colors"
                 whileHover={{ x: 2 }}
                 onClick={(e) => e.stopPropagation()}
               >
@@ -127,7 +128,7 @@ export function ProjectCard({ project, index = 0 }: ProjectCardProps) {
                 href={project.github_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-sm font-medium text-foreground/70 hover:text-foreground transition-colors"
+                className="inline-flex items-center gap-2 text-sm font-medium text-foreground/70 hover:text-accent2 transition-colors"
                 whileHover={{ x: 2 }}
                 onClick={(e) => e.stopPropagation()}
               >

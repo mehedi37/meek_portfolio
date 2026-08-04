@@ -5,7 +5,7 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { FadeInSection } from "@/components/animations";
 import { Container } from "@/components/layout/Container";
-import { VideoPlayer } from "@/components/ui/MediaDisplay";
+import { MediaDisplay } from "@/components/ui/MediaDisplay";
 import { Button, Chip } from "@heroui/react";
 import { FaGithub, FaExternalLinkAlt } from "react-icons/fa";
 import { HiVideoCamera, HiPhotograph, HiX } from "react-icons/hi";
@@ -26,7 +26,6 @@ interface ProjectDetailClientProps {
 export function ProjectDetailClient({ project }: ProjectDetailClientProps) {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const hasVideo = !!project.video_url;
-  const hasImage = !!project.image;
 
   return (
     <main className="min-h-screen bg-background pt-16">
@@ -35,7 +34,7 @@ export function ProjectDetailClient({ project }: ProjectDetailClientProps) {
         <FadeInSection className="mb-8">
           <div className="flex flex-wrap items-center gap-3 mb-4">
             {project.featured && (
-              <span className="px-3 py-1 text-xs font-medium bg-accent/10 text-accent rounded-full">
+              <span className="px-3 py-1 text-xs font-medium bg-accent2/15 text-accent2 rounded-full">
                 Featured Project
               </span>
             )}
@@ -78,26 +77,14 @@ export function ProjectDetailClient({ project }: ProjectDetailClientProps) {
 
         {/* Main Media Section - Video Player or Image */}
         <FadeInSection className="mb-12">
-          {hasVideo ? (
-            <VideoPlayer
-              url={project.video_url!}
-              thumbnail={project.image || undefined}
-              title={project.title}
-              className="shadow-2xl"
-              aspectRatio="video"
-            />
-          ) : hasImage ? (
-            <div className="relative aspect-video rounded-2xl overflow-hidden shadow-2xl">
-              <Image
-                src={project.image!}
-                alt={project.title}
-                fill
-                className="object-cover"
-                priority
-                sizes="(max-width: 1200px) 100vw, 1200px"
-              />
-            </div>
-          ) : null}
+          <MediaDisplay
+            image={project.image}
+            videoUrl={project.video_url}
+            alt={project.title}
+            aspectRatio="video"
+            priority
+            className="shadow-2xl"
+          />
         </FadeInSection>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">

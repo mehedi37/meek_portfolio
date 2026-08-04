@@ -3,6 +3,7 @@ import {
   Skills,
   Projects,
   Experience,
+  Education,
   Certifications,
   BlogPreview,
   Contact,
@@ -14,6 +15,7 @@ import {
   getSkills,
   getProjects,
   getExperiences,
+  getEducation,
   getCertifications,
   getBlogPosts,
 } from "@/lib/supabase/data";
@@ -37,6 +39,7 @@ export default async function HomePage() {
     skills,
     projects,
     experiences,
+    education,
     certifications,
     blogPosts,
   ] = await Promise.all([
@@ -46,6 +49,7 @@ export default async function HomePage() {
     getSkills(),
     getProjects(),
     getExperiences(),
+    getEducation(),
     getCertifications(),
     getBlogPosts(3), // Limit to 3 for preview
   ]);
@@ -63,6 +67,9 @@ export default async function HomePage() {
 
       {/* Experience Section - Professional timeline */}
       <Experience experiences={experiences} />
+
+      {/* Education Section - Academic background */}
+      <Education education={education} />
 
       {/* Certifications Section - Professional credentials */}
       <Certifications certifications={certifications} limit={4} />

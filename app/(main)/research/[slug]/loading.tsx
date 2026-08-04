@@ -1,6 +1,6 @@
 import { Container } from "@/components/layout/Container";
 
-export default function BlogPostLoading() {
+export default function ResearchEntryLoading() {
   return (
     <article className="min-h-screen pt-24 pb-16">
       <Container size="sm">

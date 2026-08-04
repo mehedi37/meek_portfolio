@@ -69,77 +69,6 @@ export function MagneticElement({
   );
 }
 
-interface FloatingParticlesProps {
-  count?: number;
-  className?: string;
-  colors?: string[];
-}
-
-/**
- * Floating particles background effect
- * Creates ambient animated particles
- */
-export function FloatingParticles({
-  count = 30,
-  className = "",
-  colors = ["#3B82F6", "#8B5CF6", "#F59E0B", "#10B981"],
-}: FloatingParticlesProps) {
-  const [particles, setParticles] = useState<
-    Array<{
-      id: number;
-      x: number;
-      y: number;
-      size: number;
-      color: string;
-      duration: number;
-      delay: number;
-    }>
-  >([]);
-
-  useEffect(() => {
-    const newParticles = Array.from({ length: count }, (_, i) => ({
-      id: i,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      size: Math.random() * 4 + 2,
-      color: colors[Math.floor(Math.random() * colors.length)],
-      duration: Math.random() * 20 + 15,
-      delay: Math.random() * 5,
-    }));
-    setParticles(newParticles);
-  }, [count, colors]);
-
-  return (
-    <div className={`absolute inset-0 overflow-hidden pointer-events-none ${className}`}>
-      {particles.map((particle) => (
-        <motion.div
-          key={particle.id}
-          className="absolute rounded-full opacity-30"
-          style={{
-            left: `${particle.x}%`,
-            top: `${particle.y}%`,
-            width: particle.size,
-            height: particle.size,
-            backgroundColor: particle.color,
-          }}
-          animate={{
-            y: [0, -30, 0],
-            x: [0, Math.random() * 20 - 10, 0],
-            scale: [1, 1.2, 1],
-            opacity: [0.2, 0.5, 0.2],
-          }}
-          transition={{
-            duration: particle.duration,
-            delay: particle.delay,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-        />
-      ))}
-    </div>
-  );
-}
-
 interface TextRevealProps {
   text: string;
   className?: string;
@@ -360,7 +289,6 @@ export function RippleEffect({ children, className = "", color = "rgba(255,255,2
 
 export default {
   MagneticElement,
-  FloatingParticles,
   TextReveal,
   GlowingBorder,
   Typewriter,

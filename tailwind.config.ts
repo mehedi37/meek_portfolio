@@ -21,6 +21,10 @@ const config: Config = {
           DEFAULT: "var(--color-accent)",
           foreground: "#ffffff",
         },
+        accent2: {
+          DEFAULT: "var(--color-accent-2)",
+          foreground: "var(--color-accent-2-foreground)",
+        },
         secondary: {
           DEFAULT: "var(--secondary)",
           foreground: "var(--secondary-foreground)",

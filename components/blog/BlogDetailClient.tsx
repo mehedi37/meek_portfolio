@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { FadeInSection } from "@/components/animations";
-import { VideoPlayer } from "@/components/ui/MediaDisplay";
+import { MediaDisplay } from "@/components/ui/MediaDisplay";
 import { formatDate } from "@/lib/utils";
 import { FaCalendar, FaClock, FaTwitter, FaLinkedin } from "react-icons/fa";
 import { HiVideoCamera } from "react-icons/hi";
@@ -53,9 +52,14 @@ export function BlogDetailClient({ post, shareUrl, shareTitle }: BlogDetailClien
           </div>
 
           {/* Title */}
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-2">
             {post.title}
           </h1>
+
+          {/* Venue / submission status */}
+          {post.venue && (
+            <p className="text-base italic text-muted-foreground mb-4">{post.venue}</p>
+          )}
 
           {/* Meta */}
           <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
@@ -102,27 +106,14 @@ export function BlogDetailClient({ post, shareUrl, shareTitle }: BlogDetailClien
       {(hasImage || hasVideo) && (
         <FadeInSection>
           <div className="mb-12">
-            {hasVideo ? (
-              <VideoPlayer
-                url={post.video_url!}
-                thumbnail={post.cover_image || undefined}
-                title={post.title}
-                className="rounded-xl shadow-xl"
-                aspectRatio="video"
-              />
-            ) : hasImage ? (
-              <div className="relative aspect-video rounded-xl overflow-hidden shadow-xl">
-                <Image
-                  src={post.cover_image!}
-                  alt={post.title}
-                  fill
-                  className="object-cover"
-                  priority
-                  sizes="(max-width: 768px) 100vw, 800px"
-                />
-                <div className="absolute inset-0 bg-linear-to-t from-background/50 to-transparent" />
-              </div>
-            ) : null}
+            <MediaDisplay
+              image={post.cover_image}
+              videoUrl={post.video_url}
+              alt={post.title}
+              aspectRatio="video"
+              priority
+              className="shadow-xl"
+            />
           </div>
         </FadeInSection>
       )}

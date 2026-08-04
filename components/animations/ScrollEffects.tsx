@@ -1,7 +1,8 @@
 "use client";
 
-import { motion, useScroll, useTransform, useSpring, useMotionValue, useAnimationFrame } from "framer-motion";
-import { useRef, useEffect, useState, useCallback, useMemo } from "react";
+import { motion, useScroll, useTransform, useSpring, useMotionValue } from "framer-motion";
+import { useRef, useEffect, useState, useId, useMemo } from "react";
+import { usePrefersReducedMotion, useIsMobile } from "@/hooks";
 
 /**
  * Floating geometric shapes that react to scroll position
@@ -9,15 +10,18 @@ import { useRef, useEffect, useState, useCallback, useMemo } from "react";
  */
 export function FloatingShapes() {
   const [mounted, setMounted] = useState(false);
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const isMobile = useIsMobile();
   const { scrollYProgress } = useScroll();
 
+  // Snappier catch-up to scroll position - the old stiffness: 50 read as laggy
   const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 50,
-    damping: 20,
+    stiffness: 100,
+    damping: 26,
   });
 
   // Shape configurations - memoized to prevent recreating on each render
-  const shapes = useMemo(() => [
+  const allShapes = useMemo(() => [
     { type: "circle", size: 80, x: "10%", y: "15%", color: "primary", speed: 0.3, rotateSpeed: 0.5 },
     { type: "hexagon", size: 60, x: "85%", y: "25%", color: "secondary", speed: -0.2, rotateSpeed: -0.3 },
     { type: "triangle", size: 50, x: "75%", y: "60%", color: "accent", speed: 0.4, rotateSpeed: 0.8 },
@@ -28,11 +32,15 @@ export function FloatingShapes() {
     { type: "triangle", size: 45, x: "30%", y: "85%", color: "secondary", speed: -0.4, rotateSpeed: 0.9 },
   ], []);
 
+  // Fewer shapes on mobile - smaller screens can't appreciate 8 of them anyway
+  // and it's the least affordable place to spend GPU budget
+  const shapes = isMobile ? allShapes.slice(0, 3) : allShapes;
+
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  if (!mounted) {
+  if (!mounted || prefersReducedMotion) {
     return <div className="fixed inset-0 pointer-events-none z-0" />;
   }
 
@@ -68,16 +76,13 @@ function FloatingShape({ type, size, x, y, color, speed, rotateSpeed, progress, 
   const scale = useTransform(progress, [0, 0.5, 1], [0.8, 1.1, 0.9]);
   const opacity = useTransform(progress, [0, 0.1, 0.9, 1], [0.15, 0.35, 0.35, 0.15]);
 
+  // Tonal variations of the single violet accent (--color-primary/-light/-dark)
+  // instead of unrelated cyan/magenta hues - a calmer, more professional feel
+  // than three saturated colors glowing at once.
   const colorMap: Record<string, string> = {
     primary: "oklch(0.65 0.25 285 / 0.4)",
-    secondary: "oklch(0.75 0.15 195 / 0.35)",
-    accent: "oklch(0.7 0.25 330 / 0.35)",
-  };
-
-  const glowMap: Record<string, string> = {
-    primary: "0 0 40px oklch(0.65 0.25 285 / 0.3)",
-    secondary: "0 0 40px oklch(0.75 0.15 195 / 0.25)",
-    accent: "0 0 40px oklch(0.7 0.25 330 / 0.25)",
+    secondary: "oklch(0.75 0.2 285 / 0.35)",
+    accent: "oklch(0.5 0.28 285 / 0.35)",
   };
 
   return (
@@ -90,205 +95,80 @@ function FloatingShape({ type, size, x, y, color, speed, rotateSpeed, progress, 
         rotate,
         scale,
         opacity,
+        willChange: "transform, opacity",
       }}
       initial={{ opacity: 0, scale: 0 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ delay, duration: 0.8, ease: "easeOut" }}
     >
-      <ShapeSVG
-        type={type}
-        size={size}
-        fill={colorMap[color]}
-        glow={glowMap[color]}
-      />
+      <ShapeSVG type={type} size={size} fill={colorMap[color]} />
     </motion.div>
   );
 }
 
-function ShapeSVG({ type, size, fill, glow }: { type: string; size: number; fill: string; glow: string }) {
-  const style = { filter: `drop-shadow(${glow})` };
+// Glow is baked into the SVG fill via a radial gradient instead of a CSS
+// `drop-shadow` filter - a filter re-blurs the whole shape on every animated
+// frame (8 of these were running simultaneously), the gradient fill costs
+// nothing extra at paint time.
+function ShapeSVG({ type, size, fill }: { type: string; size: number; fill: string }) {
+  const gradientId = useId();
 
-  switch (type) {
-    case "circle":
-      return (
-        <svg width={size} height={size} viewBox="0 0 100 100" style={style}>
-          <circle cx="50" cy="50" r="45" fill={fill} />
-        </svg>
-      );
-    case "hexagon":
-      return (
-        <svg width={size} height={size} viewBox="0 0 100 100" style={style}>
-          <polygon points="50,5 95,27.5 95,72.5 50,95 5,72.5 5,27.5" fill={fill} />
-        </svg>
-      );
-    case "triangle":
-      return (
-        <svg width={size} height={size} viewBox="0 0 100 100" style={style}>
-          <polygon points="50,10 90,90 10,90" fill={fill} />
-        </svg>
-      );
-    case "square":
-      return (
-        <svg width={size} height={size} viewBox="0 0 100 100" style={style}>
-          <rect x="10" y="10" width="80" height="80" rx="8" fill={fill} />
-        </svg>
-      );
-    case "donut":
-      return (
-        <svg width={size} height={size} viewBox="0 0 100 100" style={style}>
-          <circle cx="50" cy="50" r="45" fill="none" stroke={fill} strokeWidth="12" />
-        </svg>
-      );
-    default:
-      return null;
-  }
-}
+  const shape = (() => {
+    switch (type) {
+      case "circle":
+        return <circle cx="50" cy="50" r="45" fill={`url(#${gradientId})`} />;
+      case "hexagon":
+        return (
+          <polygon
+            points="50,5 95,27.5 95,72.5 50,95 5,72.5 5,27.5"
+            fill={`url(#${gradientId})`}
+          />
+        );
+      case "triangle":
+        return <polygon points="50,10 90,90 10,90" fill={`url(#${gradientId})`} />;
+      case "square":
+        return (
+          <rect x="10" y="10" width="80" height="80" rx="8" fill={`url(#${gradientId})`} />
+        );
+      case "donut":
+        return (
+          <circle
+            cx="50"
+            cy="50"
+            r="45"
+            fill="none"
+            stroke={`url(#${gradientId})`}
+            strokeWidth="12"
+          />
+        );
+      default:
+        return null;
+    }
+  })();
 
-interface Particle {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  size: number;
-  color: string;
-}
-
-/**
- * Interactive particle constellation background
- * Particles connect when close together, creating a network effect
- */
-export function ParticleField({ particleCount = 50 }: { particleCount?: number }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [mounted, setMounted] = useState(false);
-  const mousePos = useRef({ x: 0, y: 0 });
-  const particles = useRef<Particle[]>([]);
-  const animationRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    setMounted(true);
-
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const resizeCanvas = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    };
-
-    resizeCanvas();
-    window.addEventListener("resize", resizeCanvas);
-
-    // Initialize particles
-    const colors = [
-      "oklch(0.65 0.25 285 / 0.6)", // primary
-      "oklch(0.75 0.15 195 / 0.5)", // secondary
-      "oklch(0.7 0.25 330 / 0.5)",  // accent
-    ];
-
-    particles.current = Array.from({ length: particleCount }, () => ({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      vx: (Math.random() - 0.5) * 0.5,
-      vy: (Math.random() - 0.5) * 0.5,
-      size: Math.random() * 3 + 1,
-      color: colors[Math.floor(Math.random() * colors.length)],
-    }));
-
-    const handleMouseMove = (e: MouseEvent) => {
-      mousePos.current = { x: e.clientX, y: e.clientY };
-    };
-
-    window.addEventListener("mousemove", handleMouseMove);
-
-    const animate = () => {
-      if (!ctx || !canvas) return;
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Update and draw particles
-      particles.current.forEach((particle, i) => {
-        // Mouse interaction
-        const dx = mousePos.current.x - particle.x;
-        const dy = mousePos.current.y - particle.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-
-        if (dist < 150) {
-          const force = (150 - dist) / 150;
-          particle.vx -= (dx / dist) * force * 0.02;
-          particle.vy -= (dy / dist) * force * 0.02;
-        }
-
-        // Update position
-        particle.x += particle.vx;
-        particle.y += particle.vy;
-
-        // Boundary check
-        if (particle.x < 0 || particle.x > canvas.width) particle.vx *= -1;
-        if (particle.y < 0 || particle.y > canvas.height) particle.vy *= -1;
-
-        // Keep in bounds
-        particle.x = Math.max(0, Math.min(canvas.width, particle.x));
-        particle.y = Math.max(0, Math.min(canvas.height, particle.y));
-
-        // Draw particle
-        ctx.beginPath();
-        ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-        ctx.fillStyle = particle.color;
-        ctx.fill();
-
-        // Draw connections
-        particles.current.slice(i + 1).forEach((other) => {
-          const dx = particle.x - other.x;
-          const dy = particle.y - other.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-
-          if (dist < 120) {
-            ctx.beginPath();
-            ctx.moveTo(particle.x, particle.y);
-            ctx.lineTo(other.x, other.y);
-            ctx.strokeStyle = `oklch(0.65 0.15 285 / ${0.15 * (1 - dist / 120)})`;
-            ctx.lineWidth = 0.5;
-            ctx.stroke();
-          }
-        });
-      });
-
-      animationRef.current = requestAnimationFrame(animate);
-    };
-
-    animate();
-
-    return () => {
-      window.removeEventListener("resize", resizeCanvas);
-      window.removeEventListener("mousemove", handleMouseMove);
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-  }, [particleCount]);
-
-  if (!mounted) {
-    return <div className="fixed inset-0 pointer-events-none z-0" />;
-  }
+  if (!shape) return null;
 
   return (
-    <canvas
-      ref={canvasRef}
-      className="fixed inset-0 pointer-events-none z-0"
-      style={{ opacity: 0.6 }}
-    />
+    <svg width={size} height={size} viewBox="0 0 100 100">
+      <defs>
+        <radialGradient id={gradientId}>
+          <stop offset="60%" stopColor={fill} stopOpacity="1" />
+          <stop offset="100%" stopColor={fill} stopOpacity="0.3" />
+        </radialGradient>
+      </defs>
+      {shape}
+    </svg>
   );
 }
 
 /**
  * Gradient orbs that move with scroll
- * Creates a colorful, dynamic background
+ * Tonal violet variations for a calm, dynamic background
  */
 export function GradientOrbs() {
   const [mounted, setMounted] = useState(false);
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const isMobile = useIsMobile();
   const { scrollYProgress } = useScroll();
 
   const orb1Y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
@@ -299,7 +179,7 @@ export function GradientOrbs() {
     setMounted(true);
   }, []);
 
-  if (!mounted) {
+  if (!mounted || prefersReducedMotion) {
     return <div className="fixed inset-0 pointer-events-none z-0" />;
   }
 
@@ -307,185 +187,153 @@ export function GradientOrbs() {
     <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
       {/* Primary orb - Electric Violet */}
       <motion.div
-        className="absolute w-[600px] h-[600px] rounded-full blur-[100px]"
+        className="absolute w-[600px] h-[600px] rounded-full blur-[50px]"
         style={{
           left: "-10%",
           top: orb1Y,
           background: "radial-gradient(circle, oklch(0.65 0.25 285 / 0.25) 0%, transparent 70%)",
+          willChange: "transform",
         }}
       />
 
-      {/* Secondary orb - Cyber Cyan */}
+      {/* Secondary orb - lighter violet tone (was Cyber Cyan) */}
       <motion.div
-        className="absolute w-[500px] h-[500px] rounded-full blur-[80px]"
+        className="absolute w-[500px] h-[500px] rounded-full blur-[45px]"
         style={{
           right: "-5%",
           top: orb2Y,
-          background: "radial-gradient(circle, oklch(0.75 0.15 195 / 0.2) 0%, transparent 70%)",
+          background: "radial-gradient(circle, oklch(0.75 0.2 285 / 0.2) 0%, transparent 70%)",
+          willChange: "transform",
         }}
       />
 
-      {/* Accent orb - Neon Magenta */}
-      <motion.div
-        className="absolute w-[400px] h-[400px] rounded-full blur-[60px]"
-        style={{
-          left: "40%",
-          top: orb3Y,
-          background: "radial-gradient(circle, oklch(0.7 0.25 330 / 0.15) 0%, transparent 70%)",
-        }}
-      />
+      {/* Accent orb - darker violet tone (was Neon Magenta) - skipped on mobile, least visible of the three */}
+      {!isMobile && (
+        <motion.div
+          className="absolute w-[400px] h-[400px] rounded-full blur-[35px]"
+          style={{
+            left: "40%",
+            top: orb3Y,
+            background: "radial-gradient(circle, oklch(0.5 0.28 285 / 0.15) 0%, transparent 70%)",
+            willChange: "transform",
+          }}
+        />
+      )}
     </div>
   );
 }
 
 /**
  * Interactive cursor glow effect
- * Follows the mouse with a trailing glow
+ * Follows the mouse with a trailing glow. Catch-up speed scales with how
+ * fast the mouse is moving - a fixed-stiffness spring always felt sluggish
+ * on quick flicks and needlessly slow when the mouse was barely moving.
  */
 export function CursorGlow() {
   const [mounted, setMounted] = useState(false);
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const isMobile = useIsMobile();
   const cursorX = useMotionValue(0);
   const cursorY = useMotionValue(0);
+  const mouseRafRef = useRef<number | null>(null);
+  const pendingRef = useRef<{ x: number; y: number } | null>(null);
 
-  const springConfig = { damping: 25, stiffness: 150 };
-  const cursorXSpring = useSpring(cursorX, springConfig);
-  const cursorYSpring = useSpring(cursorY, springConfig);
+  const targetRef = useRef({ x: 0, y: 0 });
+  const lastMoveRef = useRef<{ x: number; y: number; t: number } | null>(null);
+  const speedRef = useRef(0); // px/ms, decays each render tick
+  const loopRafRef = useRef<number | null>(null);
 
   useEffect(() => {
+    if (prefersReducedMotion || isMobile) return;
+
     setMounted(true);
 
-    const handleMouseMove = (e: MouseEvent) => {
-      cursorX.set(e.clientX);
-      cursorY.set(e.clientY);
+    // Smoothing loop: lerp the rendered position toward the raw target each
+    // frame, with the lerp factor scaled by recent mouse speed. Stops itself
+    // once it's settled instead of running forever like a naive rAF loop.
+    const SETTLE_EPSILON = 0.5;
+    const MIN_ALPHA = 0.15;
+    const MAX_ALPHA = 0.9;
+    const SPEED_TO_ALPHA = 0.03;
+
+    const runLoop = () => {
+      const alpha = Math.min(
+        MAX_ALPHA,
+        Math.max(MIN_ALPHA, MIN_ALPHA + speedRef.current * SPEED_TO_ALPHA)
+      );
+      const curX = cursorX.get();
+      const curY = cursorY.get();
+      const dx = targetRef.current.x - curX;
+      const dy = targetRef.current.y - curY;
+
+      speedRef.current *= 0.9; // decay so stale speed doesn't linger after the mouse stops
+
+      if (Math.abs(dx) < SETTLE_EPSILON && Math.abs(dy) < SETTLE_EPSILON) {
+        cursorX.set(targetRef.current.x);
+        cursorY.set(targetRef.current.y);
+        loopRafRef.current = null;
+        return;
+      }
+
+      cursorX.set(curX + dx * alpha);
+      cursorY.set(curY + dy * alpha);
+      loopRafRef.current = requestAnimationFrame(runLoop);
     };
 
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, [cursorX, cursorY]);
+    const ensureLoopRunning = () => {
+      if (loopRafRef.current === null) {
+        loopRafRef.current = requestAnimationFrame(runLoop);
+      }
+    };
 
-  if (!mounted) return null;
+    // Batch to one update per animation frame instead of once per raw
+    // mousemove event (which can fire far more often than the display refreshes).
+    const handleMouseMove = (e: MouseEvent) => {
+      pendingRef.current = { x: e.clientX, y: e.clientY };
+      if (mouseRafRef.current) return;
+      mouseRafRef.current = requestAnimationFrame(() => {
+        if (pendingRef.current) {
+          const { x, y } = pendingRef.current;
+          const now = performance.now();
+          if (lastMoveRef.current) {
+            const dt = Math.max(1, now - lastMoveRef.current.t);
+            const dist = Math.hypot(x - lastMoveRef.current.x, y - lastMoveRef.current.y);
+            speedRef.current = Math.max(speedRef.current, dist / dt);
+          }
+          lastMoveRef.current = { x, y, t: now };
+          targetRef.current = { x, y };
+          ensureLoopRunning();
+        }
+        mouseRafRef.current = null;
+      });
+    };
+
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      if (mouseRafRef.current) cancelAnimationFrame(mouseRafRef.current);
+      if (loopRafRef.current) cancelAnimationFrame(loopRafRef.current);
+    };
+  }, [cursorX, cursorY, prefersReducedMotion, isMobile]);
+
+  if (!mounted || prefersReducedMotion || isMobile) return null;
 
   return (
     <motion.div
-      className="fixed w-[300px] h-[300px] rounded-full pointer-events-none z-[100] mix-blend-screen"
+      // Plain opacity-based glow instead of `mix-blend-screen`, which forces
+      // the compositor to recompute against everything underneath on every
+      // tick - this looks near-identical against the site's dark/paper
+      // backgrounds at a fraction of the paint cost.
+      className="fixed w-[300px] h-[300px] rounded-full pointer-events-none z-[100]"
       style={{
-        x: cursorXSpring,
-        y: cursorYSpring,
+        x: cursorX,
+        y: cursorY,
         translateX: "-50%",
         translateY: "-50%",
-        background: "radial-gradient(circle, oklch(0.65 0.25 285 / 0.15) 0%, transparent 70%)",
+        background: "radial-gradient(circle, oklch(0.65 0.25 285 / 0.12) 0%, transparent 70%)",
+        willChange: "transform",
       }}
     />
   );
 }
 
-/**
- * Scroll-triggered counter animation
- */
-export function AnimatedCounter({
-  value,
-  suffix = "",
-  duration = 2
-}: {
-  value: number;
-  suffix?: string;
-  duration?: number;
-}) {
-  const [count, setCount] = useState(0);
-  const [hasAnimated, setHasAnimated] = useState(false);
-  const ref = useRef<HTMLSpanElement>(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && !hasAnimated) {
-          setHasAnimated(true);
-
-          const startTime = Date.now();
-          const endTime = startTime + duration * 1000;
-
-          const animate = () => {
-            const now = Date.now();
-            const progress = Math.min((now - startTime) / (duration * 1000), 1);
-            const easeProgress = 1 - Math.pow(1 - progress, 3); // Ease out cubic
-
-            setCount(Math.floor(easeProgress * value));
-
-            if (now < endTime) {
-              requestAnimationFrame(animate);
-            } else {
-              setCount(value);
-            }
-          };
-
-          requestAnimationFrame(animate);
-        }
-      },
-      { threshold: 0.5 }
-    );
-
-    if (ref.current) {
-      observer.observe(ref.current);
-    }
-
-    return () => observer.disconnect();
-  }, [value, duration, hasAnimated]);
-
-  return (
-    <span ref={ref}>
-      {count}{suffix}
-    </span>
-  );
-}
-
-/**
- * Scroll-triggered text reveal with gradient
- */
-export function GradientTextReveal({
-  children,
-  className = ""
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start 0.9", "start 0.3"],
-  });
-
-  const backgroundSize = useTransform(scrollYProgress, [0, 1], ["0% 100%", "100% 100%"]);
-
-  return (
-    <motion.div
-      ref={ref}
-      className={`bg-gradient-to-r from-[var(--color-primary)] via-[var(--color-accent)] to-[var(--color-secondary)] bg-clip-text text-transparent bg-no-repeat ${className}`}
-      style={{ backgroundSize }}
-    >
-      {children}
-    </motion.div>
-  );
-}
-
-/**
- * Section divider with animated line
- */
-export function AnimatedDivider() {
-  const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start 0.9", "start 0.5"],
-  });
-
-  const scaleX = useTransform(scrollYProgress, [0, 1], [0, 1]);
-
-  return (
-    <div ref={ref} className="relative w-full h-px my-16 overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[var(--border)] to-transparent" />
-      <motion.div
-        className="absolute inset-0 bg-gradient-to-r from-transparent via-[var(--color-primary)] to-transparent origin-center"
-        style={{ scaleX }}
-      />
-    </div>
-  );
-}

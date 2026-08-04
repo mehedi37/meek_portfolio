@@ -202,27 +202,27 @@ export function Skills({ className = "", categories = [], skills = [], profile }
   const totalSkills = skills.length;
 
   // Use profile data if available, otherwise use fallback values
-  const stats = [
-    {
-      label: "Years Experience",
-      value: profile?.years_experience ? `${profile.years_experience}+` : "3+",
-      icon: HiTrendingUp
-    },
-    {
-      label: "Projects Completed",
-      value: profile?.completed_projects ? `${profile.completed_projects}+` : "35+",
-      icon: HiCode
-    },
-    {
-      label: "Happy Clients",
-      value: profile?.happy_clients ? `${profile.happy_clients}+` : "40+",
-      icon: HiSparkles
-    },
-    {
-      label: "Technologies",
-      value: totalSkills > 0 ? `${totalSkills}+` : "20+",
-      icon: HiServer
-    },
+  const stats: { label: string; value: string; icon: React.ElementType }[] = [
+    // {
+    //   label: "Years Experience",
+    //   value: profile?.years_experience ? `${profile.years_experience}+` : "3+",
+    //   icon: HiTrendingUp
+    // },
+    // {
+    //   label: "Projects Completed",
+    //   value: profile?.completed_projects ? `${profile.completed_projects}+` : "35+",
+    //   icon: HiCode
+    // },
+    // {
+    //   label: "Happy Clients",
+    //   value: profile?.happy_clients ? `${profile.happy_clients}+` : "40+",
+    //   icon: HiSparkles
+    // },
+    // {
+    //   label: "Technologies",
+    //   value: totalSkills > 0 ? `${totalSkills}+` : "20+",
+    //   icon: HiServer
+    // },
   ];
 
   // Check if we have data

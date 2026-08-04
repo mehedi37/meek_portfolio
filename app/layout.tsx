@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { siteConfig } from "@/lib/constants";
-import { Navbar, Footer } from "@/components/ui";
+import { getSiteProfile, getSocialLinks } from "@/lib/supabase/data";
 
 // Font configuration
 const inter = Inter({
@@ -57,7 +57,6 @@ export const metadata: Metadata = {
     title: siteConfig.title,
     description: siteConfig.description,
     images: [siteConfig.ogImage || "/og-image.png"],
-    creator: "@yourusername",
   },
   robots: {
     index: true,
@@ -81,7 +80,7 @@ export const metadata: Metadata = {
 // Viewport configuration
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: light)", color: "#f8f3ea" },
     { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
   ],
   width: "device-width",
@@ -98,7 +97,24 @@ interface RootLayoutProps {
  * Provides base HTML structure, fonts, and theme initialization
  * Child layouts handle specific UI (navbar, footer, etc.)
  */
-export default function RootLayout({ children }: RootLayoutProps) {
+export default async function RootLayout({ children }: RootLayoutProps) {
+  const [siteProfile, socialLinks] = await Promise.all([
+    getSiteProfile(),
+    getSocialLinks(),
+  ]);
+
+  const personJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name: siteProfile?.full_name || siteConfig.name,
+    ...(siteProfile?.tagline ? { jobTitle: siteProfile.tagline } : {}),
+    url: siteConfig.url,
+    ...(siteProfile?.profile_image ? { image: siteProfile.profile_image } : {}),
+    ...(socialLinks.length > 0
+      ? { sameAs: socialLinks.map((link) => link.url) }
+      : {}),
+  };
+
   return (
     <html
       lang="en"
@@ -125,6 +141,14 @@ export default function RootLayout({ children }: RootLayoutProps) {
                 } catch (e) {}
               })();
             `,
+          }}
+        />
+        <script
+          type="application/ld+json"
+          // JSON.stringify doesn't escape "</script>", which could break out of this tag
+          // if it ever appeared in DB-sourced fields (e.g. a social link URL).
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(personJsonLd).replace(/</g, "\\u003c"),
           }}
         />
       </head>

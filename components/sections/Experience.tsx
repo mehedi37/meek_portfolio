@@ -57,14 +57,14 @@ function TimelineCard({
       className="relative pl-10 md:pl-0 md:grid md:grid-cols-[180px_auto_1fr] md:gap-6 lg:grid-cols-[200px_auto_1fr] lg:gap-8"
       initial={{ opacity: 0, y: 40 }}
       animate={isInView ? { opacity: 1, y: 0 } : {}}
-      transition={{ delay: index * 0.12, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ delay: index * 0.06, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
     >
       {/* Left side - Date (desktop) */}
       <div className="hidden md:flex md:flex-col md:items-end md:justify-start md:pt-6">
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={isInView ? { opacity: 1, x: 0 } : {}}
-          transition={{ delay: index * 0.12 + 0.15, duration: 0.4 }}
+          transition={{ delay: index * 0.06 + 0.15, duration: 0.4 }}
           className="text-right space-y-1"
         >
           <span className="text-sm font-semibold text-accent block">
@@ -86,7 +86,7 @@ function TimelineCard({
           className="relative mt-6"
           initial={{ scale: 0 }}
           animate={isInView ? { scale: 1 } : {}}
-          transition={{ delay: index * 0.12 + 0.2, duration: 0.35, type: "spring", stiffness: 260, damping: 20 }}
+          transition={{ delay: index * 0.06 + 0.2, duration: 0.35, type: "spring", stiffness: 260, damping: 20 }}
         >
           {/* Outer glow ring */}
           <motion.span
@@ -154,7 +154,7 @@ function TimelineCard({
               className="absolute inset-0 bg-linear-to-b from-separator via-separator/50 to-separator/20 rounded-full"
               initial={{ scaleY: 0 }}
               animate={isInView ? { scaleY: 1 } : {}}
-              transition={{ delay: index * 0.12 + 0.35, duration: 0.6, ease: "easeOut" }}
+              transition={{ delay: index * 0.06 + 0.35, duration: 0.4, ease: "easeOut" }}
               style={{ transformOrigin: "top" }}
             />
 
@@ -166,7 +166,7 @@ function TimelineCard({
                 bottom: ["0%", "115%"],
               } : {}}
               transition={{
-                delay: index * 0.12 + 0.8,
+                delay: index * 0.06 + 0.8,
                 duration: 2,
                 repeat: Infinity,
                 repeatDelay: 2,
@@ -193,7 +193,7 @@ function TimelineCard({
                   scale: [0.4, 1, 0.8, 0.3],
                 } : {}}
                 transition={{
-                  delay: index * 0.12 + 1 + i * 0.2,
+                  delay: index * 0.06 + 1 + i * 0.2,
                   duration: 1.8,
                   repeat: Infinity,
                   repeatDelay: 3.5,
@@ -210,7 +210,7 @@ function TimelineCard({
         className="pb-10"
         initial={{ opacity: 0, x: -15 }}
         animate={isInView ? { opacity: 1, x: 0 } : {}}
-        transition={{ delay: index * 0.12 + 0.25, duration: 0.45 }}
+        transition={{ delay: index * 0.06 + 0.25, duration: 0.35 }}
       >
         {/* Mobile date badge */}
         <div className="md:hidden flex items-center gap-2 text-xs text-muted mb-3 bg-surface/60 backdrop-blur-sm rounded-lg px-3 py-2 border border-separator/40 w-fit">

@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { useInView } from "@/hooks/useInView";
 import {
   isYouTubeUrl,
   isVimeoUrl,
@@ -68,6 +69,10 @@ export function MiniVideoPlayer({
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const isTouchDevice = useMediaQuery("(hover: none), (pointer: coarse)");
+  // Start buffering once the card is actually visible, not on hover - waiting
+  // for hover means the first hover on any given video shows a loading pulse
+  // while the browser fetches data it hasn't touched yet.
+  const { ref: inViewRef, hasBeenInView } = useInView({ threshold: 0.1 });
 
   const isYouTube = isYouTubeUrl(videoUrl);
   const isVimeo = isVimeoUrl(videoUrl);
@@ -114,10 +119,20 @@ export function MiniVideoPlayer({
     setIsLoading(false);
   }, []);
 
+  // Changing the `preload` attribute alone doesn't retroactively trigger
+  // loading on an already-mounted <video> - explicitly restart resource
+  // selection once it's worth buffering.
+  useEffect(() => {
+    if (hasBeenInView && canPlayDirectly) {
+      videoRef.current?.load();
+    }
+  }, [hasBeenInView, canPlayDirectly]);
+
   // For direct videos, render actual video element
   if (canPlayDirectly && !hasError) {
     return (
       <div
+        ref={inViewRef}
         className={`relative overflow-hidden ${className}`}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
@@ -139,7 +154,7 @@ export function MiniVideoPlayer({
           muted
           loop
           playsInline
-          preload="metadata"
+          preload={hasBeenInView ? "auto" : "none"}
           onLoadedData={handleVideoLoad}
           onCanPlay={handleVideoLoad}
           onError={handleVideoError}
@@ -161,9 +176,11 @@ export function MiniVideoPlayer({
           )}
         </AnimatePresence>
 
-        {/* Play indicator when not playing */}
+        {/* Play indicator when not playing - desktop only, since touch
+            devices can't hover-to-play and the button would be a dead tap
+            target; the "Preview" badge below is the honest signal there. */}
         <AnimatePresence>
-          {!isPlaying && !isLoading && (
+          {!isPlaying && !isLoading && !isTouchDevice && (
             <motion.div
               className="absolute inset-0 flex items-center justify-center bg-black/30 z-3"
               initial={{ opacity: 0 }}
@@ -475,6 +492,7 @@ export function VideoPlayer({
         poster={thumbnail || undefined}
         muted={isMuted}
         playsInline
+        preload="auto"
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
         onPlay={() => setIsPlaying(true)}

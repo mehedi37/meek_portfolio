@@ -14,6 +14,9 @@ export type {
   Experience,
   ExperienceInsert,
   ExperienceUpdate,
+  Education,
+  EducationInsert,
+  EducationUpdate,
   Certification,
   CertificationInsert,
   CertificationUpdate,
@@ -44,18 +47,6 @@ export type SkillCategory =
   | "tools"
   | "languages"
   | "frameworks";
-
-export interface Education {
-  id: string;
-  institution: string;
-  degree: string;
-  field: string;
-  startDate: string;
-  endDate?: string;
-  current: boolean;
-  description?: string;
-  logo?: string;
-}
 
 export interface BlogFrontmatter {
   title: string;
@@ -93,14 +84,4 @@ export interface NavItem {
   name: string;
   href: string;
   isExternal?: boolean;
-}
-
-// Animation stages for scroll-linked animations (Growing Boy)
-export type AnimationStage = "child" | "teen" | "youngAdult" | "professional";
-
-// Animation stage configuration
-export interface AnimationStageConfig {
-  name: string;
-  start: number;
-  end: number;
 }

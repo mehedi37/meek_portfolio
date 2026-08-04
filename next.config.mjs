@@ -6,9 +6,11 @@ const nextConfig = {
   // Fix workspace root warning
   outputFileTracingRoot: import.meta.dirname,
 
+  // React 19 compiler
+  reactCompiler: true,
+
   // Optimize bundle size
   experimental: {
-    reactCompiler: true, // React 19 compiler
     optimizePackageImports: ["@heroui/react", "react-icons", "framer-motion"],
   },
 
