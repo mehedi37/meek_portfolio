@@ -14,6 +14,7 @@ import type { BlogPost } from "@/lib/supabase/types";
 
 interface BlogDetailClientProps {
   post: BlogPost;
+  contentHtml: string;
   shareUrl: string;
   shareTitle: string;
 }
@@ -22,7 +23,7 @@ interface BlogDetailClientProps {
  * Blog detail page with native video player
  * Uses HTML5 <video> for direct files and <iframe> for YouTube/Vimeo
  */
-export function BlogDetailClient({ post, shareUrl, shareTitle }: BlogDetailClientProps) {
+export function BlogDetailClient({ post, contentHtml, shareUrl, shareTitle }: BlogDetailClientProps) {
   const hasVideo = !!post.video_url;
   const hasImage = !!post.cover_image;
 
@@ -141,7 +142,7 @@ export function BlogDetailClient({ post, shareUrl, shareTitle }: BlogDetailClien
             prose-img:rounded-xl prose-img:shadow-lg
             prose-blockquote:border-accent prose-blockquote:bg-accent/5 prose-blockquote:rounded-r-lg prose-blockquote:py-1
             prose-li:marker:text-accent"
-          dangerouslySetInnerHTML={{ __html: post.content || '' }}
+          dangerouslySetInnerHTML={{ __html: contentHtml }}
         />
       </FadeInSection>
 

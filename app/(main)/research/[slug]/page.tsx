@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Container } from "@/components/layout/Container";
 import { BlogDetailClient } from "@/components/blog/BlogDetailClient";
 import { getBlogPostBySlug, getAllBlogSlugs } from "@/lib/supabase/data";
+import { markdownToHtml } from "@/lib/markdown";
 
 interface BlogPostPageProps {
   params: Promise<{ slug: string }>;
@@ -59,11 +60,15 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const shareUrl = encodeURIComponent(`${process.env.NEXT_PUBLIC_SITE_URL || ''}/research/${slug}`);
   const shareTitle = encodeURIComponent(post.title);
 
+  // Render the Markdown content authored in the admin dashboard to HTML
+  const contentHtml = await markdownToHtml(post.content || "");
+
   return (
     <article className="min-h-screen pt-24 pb-16">
       <Container size="sm">
         <BlogDetailClient
           post={post}
+          contentHtml={contentHtml}
           shareUrl={shareUrl}
           shareTitle={shareTitle}
         />
